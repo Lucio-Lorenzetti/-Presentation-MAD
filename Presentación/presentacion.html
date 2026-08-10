@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MAD — Sistema de Gestión Inmobiliario</title>
+<meta name="description" content="Presentación integral del Sistema de Gestión Inmobiliario: planificación, requerimientos y simulación de módulos."/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          50: '#FFF7ED',
+          100: '#FFEDD5',
+          200: '#FED7AA',
+          300: '#FDBA74',
+          400: '#FB923C',
+          500: '#F97316',
+          600: '#EA580C',
+          700: '#C2410C',
+          800: '#9A3412',
+          900: '#7C2D12',
+        },
+        warm: {
+          50: '#FEFDFB',
+          100: '#FDF8F0',
+          200: '#F5EFE6',
+          300: '#E8E0D4',
+          400: '#C4B8A8',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Georgia', 'serif'],
+      },
+    },
+  },
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  html { scroll-behavior: smooth; }
+  
+  /* Reveal animation */
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal-d1 { transition-delay: .1s; }
+  .reveal-d2 { transition-delay: .2s; }
+  .reveal-d3 { transition-delay: .3s; }
+
+  /* Active nav indicator */
+  .nav-link.active { color: #F97316; border-bottom: 2px solid #F97316; }
+
+  /* Module tab active */
+  .mod-tab.active { background: #F97316; color: white; }
+  .mod-tab.active i { color: white; }
+
+  /* Sidebar link active */
+  .sidebar-link.active { background: #FFF7ED; color: #C2410C; font-weight: 600; }
+  .sidebar-link.active i { color: #F97316; }
+
+  /* Card hover lift */
+  .card-lift { transition: transform .25s, box-shadow .25s; }
+  .card-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.08); }
+
+  /* Priority badge pulse */
+  @keyframes softPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .7; }
+  }
+
+  /* Custom scrollbar for mockup */
+  .mockup-scroll::-webkit-scrollbar { width: 5px; }
+  .mockup-scroll::-webkit-scrollbar-track { background: #F5F5F4; }
+  .mockup-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
+
+  /* Topbar shadow on scroll */
+  .topbar-shadow { box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+</style>
+</head>
+<body class="bg-warm-50 text-stone-800 antialiased">
+
+<!-- ═══════════════════════════════════════════════
+     NAVBAR
+     ═══════════════════════════════════════════════ -->
+<nav id="navbar" class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-stone-200/60 transition-all">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#portada" class="flex items-center gap-2 text-lg font-bold tracking-tight text-stone-800">
+      <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white text-sm font-extrabold">M</div>
+      MAD<span class="text-brand-500">.</span>
+    </a>
+    <div class="hidden md:flex items-center gap-1">
+      <a href="#portada" class="nav-link px-3 py-1.5 text-sm font-medium text-stone-500 hover:text-brand-600 border-b-2 border-transparent transition-all">Inicio</a>
+      <a href="#necesidades" class="nav-link px-3 py-1.5 text-sm font-medium text-stone-500 hover:text-brand-600 border-b-2 border-transparent transition-all">Necesidades</a>
+      <a href="#prioridades" class="nav-link px-3 py-1.5 text-sm font-medium text-stone-500 hover:text-brand-600 border-b-2 border-transparent transition-all">Prioridades</a>
+      <a href="#roles" class="nav-link px-3 py-1.5 text-sm font-medium text-stone-500 hover:text-brand-600 border-b-2 border-transparent transition-all">Roles</a>
+      <a href="#simulacion" class="nav-link px-3 py-1.5 text-sm font-medium text-stone-500 hover:text-brand-600 border-b-2 border-transparent transition-all">Simulación</a>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════════════
+     1. PORTADA / BIENVENIDA
+     ═══════════════════════════════════════════════ -->
+<section id="portada" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
+  <!-- Background decoration -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+    <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-50 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-brand-100/30 rounded-full"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-brand-100/20 rounded-full"></div>
+  </div>
+
+  <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+    <!-- Badge -->
+    <div class="inline-flex items-center gap-2 bg-white border border-brand-200 rounded-full px-4 py-1.5 text-sm font-medium text-brand-700 mb-8 shadow-sm reveal">
+      <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+      Presentación Integral
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight text-stone-800 mb-6 reveal reveal-d1">
+      Sistema de Gestión<br>
+      <span class="text-brand-500">Inmobiliario</span>
+    </h1>
+
+    <p class="text-xs font-semibold tracking-widest uppercase text-brand-600 mb-4 reveal reveal-d1">Planificación Integral y Requerimientos</p>
+
+    <!-- Subtitle -->
+    <p class="text-lg text-stone-500 max-w-2xl mx-auto mb-10 leading-relaxed reveal reveal-d2">
+      Un <strong class="text-stone-700">sistema de gestión web</strong> diseñado para centralizar la administración de alquileres, 
+      automatizar procesos manuales como la facturación y actualización de contratos, y eliminar 
+      errores u olvidos operativos en el día a día de la inmobiliaria.
+    </p>
+
+    <!-- CTA buttons -->
+    <div class="flex flex-wrap gap-4 justify-center reveal reveal-d3">
+      <a href="#necesidades" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-7 py-3.5 rounded-full font-semibold text-sm shadow-lg shadow-brand-200 hover:shadow-brand-300 transition-all hover:-translate-y-0.5">
+        <i class="fa-solid fa-arrow-down text-xs"></i>
+        Comenzar recorrido
+      </a>
+      <a href="#simulacion" class="inline-flex items-center gap-2 bg-white hover:bg-stone-50 text-stone-700 px-7 py-3.5 rounded-full font-semibold text-sm border border-stone-200 hover:border-brand-300 transition-all hover:-translate-y-0.5">
+        <i class="fa-solid fa-display text-xs text-brand-500"></i>
+        Ver simulación
+      </a>
+    </div>
+
+    <!-- Stats row -->
+    <div class="flex flex-wrap justify-center gap-8 mt-16 reveal reveal-d3">
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-brand-500">4</div>
+        <div class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Módulos</div>
+      </div>
+      <div class="w-px bg-stone-200 hidden sm:block"></div>
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-brand-500">5</div>
+        <div class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Roles</div>
+      </div>
+      <div class="w-px bg-stone-200 hidden sm:block"></div>
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-brand-500">3</div>
+        <div class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Niveles de prioridad</div>
+      </div>
+      <div class="w-px bg-stone-200 hidden sm:block"></div>
+      <div class="text-center">
+        <div class="text-3xl font-extrabold text-brand-500">100%</div>
+        <div class="text-xs text-stone-400 font-medium uppercase tracking-wider mt-1">Web</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     2. NECESIDADES DETECTADAS
+     ═══════════════════════════════════════════════ -->
+<section id="necesidades" class="py-24 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <!-- Section header -->
+    <div class="text-center mb-16">
+      <div class="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-brand-600 mb-3 reveal">
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+        Relevamiento inicial
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-800 mb-4 reveal reveal-d1">
+        Necesidades detectadas en la entrevista
+      </h2>
+      <p class="text-stone-500 max-w-xl mx-auto reveal reveal-d2">Estos son los problemas reales que relevamos. Cada uno consume horas de trabajo que el sistema va a eliminar.</p>
+    </div>
+
+    <!-- Problem cards grid -->
+    <div class="grid sm:grid-cols-2 gap-5">
+      <!-- Card 1 -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-7 reveal">
+        <div class="w-12 h-12 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center mb-5">
+          <i class="fa-solid fa-file-invoice-dollar text-red-500 text-lg"></i>
+        </div>
+        <h3 class="text-lg font-bold text-stone-800 mb-2">Emisión manual y compleja de facturación</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">
+          Actualmente se facturan honorarios mediante ARCA pero el resto de las operaciones se administran de forma completamente manual. 
+          Emitir recibos, calcular comisiones y cruzar datos entre propietarios e inquilinos consume horas cada semana.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="text-xs bg-red-50 text-red-600 px-2.5 py-1 rounded-full font-medium">Prioridad crítica</span>
+          <span class="text-xs bg-stone-100 text-stone-500 px-2.5 py-1 rounded-full font-medium">ARCA / AFIP</span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-7 reveal reveal-d1">
+        <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center mb-5">
+          <i class="fa-solid fa-chart-line text-amber-500 text-lg"></i>
+        </div>
+        <h3 class="text-lg font-bold text-stone-800 mb-2">Olvidos en actualizaciones de alquiler por índice</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">
+          Los contratos tienen actualizaciones por IPC/ICL que deben aplicarse cada 3 meses. Sin un sistema 
+          que detecte y calcule automáticamente, algunos aumentos se aplican tarde o directamente se olvidan, generando pérdidas.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="text-xs bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full font-medium">Pérdida de ingresos</span>
+          <span class="text-xs bg-stone-100 text-stone-500 px-2.5 py-1 rounded-full font-medium">IPC / ICL</span>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-7 reveal">
+        <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center mb-5">
+          <i class="fa-solid fa-bell-slash text-blue-500 text-lg"></i>
+        </div>
+        <h3 class="text-lg font-bold text-stone-800 mb-2">Falta de automatización en avisos y recordatorios</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">
+          No existen avisos automáticos de vencimiento de cuotas, recordatorios de cobro ni notificaciones de gastos de servicios. 
+          Los inquilinos no reciben información proactiva y los propietarios desconocen el estado de sus cobros.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full font-medium">WhatsApp · Email</span>
+          <span class="text-xs bg-stone-100 text-stone-500 px-2.5 py-1 rounded-full font-medium">15 días antes</span>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-7 reveal reveal-d1">
+        <div class="w-12 h-12 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center mb-5">
+          <i class="fa-solid fa-folder-open text-purple-500 text-lg"></i>
+        </div>
+        <h3 class="text-lg font-bold text-stone-800 mb-2">Descentralización de la información</h3>
+        <p class="text-sm text-stone-500 leading-relaxed">
+          Contratos en PDFs sueltos, datos en planillas de Excel, registros manuales propensos a errores y duplicados. 
+          Cada consulta requiere buscar entre múltiples archivos y fuentes, sin un historial unificado.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span class="text-xs bg-purple-50 text-purple-600 px-2.5 py-1 rounded-full font-medium">Datos dispersos</span>
+          <span class="text-xs bg-stone-100 text-stone-500 px-2.5 py-1 rounded-full font-medium">Sin historial</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     3. PRIORIDADES Y ALCANCE
+     ═══════════════════════════════════════════════ -->
+<section id="prioridades" class="py-24 bg-warm-100">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <div class="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-brand-600 mb-3 reveal">
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+        Alcance del proyecto
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-800 mb-4 reveal reveal-d1">
+        Prioridades y alcance
+      </h2>
+      <p class="text-stone-500 max-w-xl mx-auto reveal reveal-d2">Cada funcionalidad tiene su momento. Priorizamos lo que más impacta para que veas resultados desde la primera fase.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-5">
+
+      <!-- ALTA -->
+      <div class="card-lift bg-white border border-stone-200/80 rounded-2xl overflow-hidden reveal">
+        <div class="bg-red-50 border-b border-red-100 px-6 py-4 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-red-500 shadow-sm shadow-red-200" style="animation: softPulse 2s infinite;"></span>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-red-600">Prioridad Alta</div>
+            <div class="text-xs text-red-400 font-medium">MVP — Lo primero que resolvemos</div>
+          </div>
+        </div>
+        <div class="p-6 space-y-3.5">
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Facturación mediante ARCA (AFIP)</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Emisión de recibos de alquiler y honorarios</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Gestión de contratos de alquiler</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Actualización automática de alquileres según IPC e ICL</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Notificaciones automáticas por correo electrónico</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Registro manual de pagos con cálculo automático de recargos por mora (0.5% diario)</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-solid fa-check-circle text-red-400 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Control de acceso por roles y permisos</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEDIA -->
+      <div class="card-lift bg-white border border-stone-200/80 rounded-2xl overflow-hidden reveal reveal-d1">
+        <div class="bg-amber-50 border-b border-amber-100 px-6 py-4 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-200"></span>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-amber-600">Prioridad Media</div>
+            <div class="text-xs text-amber-400 font-medium">Siguiente iteración</div>
+          </div>
+        </div>
+        <div class="p-6 space-y-3.5">
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-circle text-amber-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Gestión de propietarios con métodos de cobro</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-circle text-amber-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Gestión de propiedades (casas y locales comerciales)</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-circle text-amber-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Generación automática de contratos mediante plantillas</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-circle text-amber-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Portales de autogestión para inquilinos y propietarios</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-circle text-amber-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Reportes financieros (ingresos, deudas, recargos, estado de contratos)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BAJA -->
+      <div class="card-lift bg-white border border-stone-200/80 rounded-2xl overflow-hidden reveal reveal-d2">
+        <div class="bg-blue-50 border-b border-blue-100 px-6 py-4 flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-blue-500 shadow-sm shadow-blue-200"></span>
+          <div>
+            <div class="text-xs font-bold uppercase tracking-wider text-blue-600">Prioridad Baja / Futuro</div>
+            <div class="text-xs text-blue-400 font-medium">Próximas versiones</div>
+          </div>
+        </div>
+        <div class="p-6 space-y-3.5">
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-clock text-blue-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Mapa interactivo de propiedades en Bahía Blanca</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-clock text-blue-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Integración con Veraz para evaluación crediticia</span>
+          </div>
+          <div class="flex items-start gap-3">
+            <i class="fa-regular fa-clock text-blue-300 text-sm mt-0.5 shrink-0"></i>
+            <span class="text-sm text-stone-600">Módulo de compra y venta de inmuebles</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     4. ROLES DE USUARIO
+     ═══════════════════════════════════════════════ -->
+<section id="roles" class="py-24 bg-white">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-16">
+      <div class="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-brand-600 mb-3 reveal">
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+        Accesos y permisos
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-800 mb-4 reveal reveal-d1">Roles de usuario y accesos</h2>
+      <p class="text-stone-500 max-w-xl mx-auto reveal reveal-d2">Cada persona accede únicamente a lo que necesita. Control estricto por roles con permisos granulares.</p>
+    </div>
+
+    <!-- Roles grid -->
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- Desarrollador -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-full bg-stone-800 text-white flex items-center justify-center text-sm font-bold mb-4">
+          <i class="fa-solid fa-code"></i>
+        </div>
+        <h3 class="font-bold text-stone-800 mb-1">Desarrollador</h3>
+        <p class="text-xs text-stone-400 mb-4">Acceso técnico total</p>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Configuraciones críticas del sistema</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Recuperación de datos eliminados (borrado lógico)</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Gestión técnica y mantenimiento</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Acceso a todos los módulos</li>
+        </ul>
+      </div>
+
+      <!-- Administrador -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-6 reveal reveal-d1">
+        <div class="w-11 h-11 rounded-full bg-brand-500 text-white flex items-center justify-center text-sm font-bold mb-4">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <h3 class="font-bold text-stone-800 mb-1">Administrador</h3>
+        <p class="text-xs text-stone-400 mb-4">Dueña de la inmobiliaria</p>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Gestión total de propiedades y contratos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Facturación ARCA y emisión de recibos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Registro de pagos y reportes financieros</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Gestión de inquilinos, propietarios y usuarios</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Configuración del sistema y eliminaciones</li>
+        </ul>
+      </div>
+
+      <!-- Empleados -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-6 reveal reveal-d2">
+        <div class="w-11 h-11 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold mb-4">
+          <i class="fa-solid fa-user-tie"></i>
+        </div>
+        <h3 class="font-bold text-stone-800 mb-1">Empleados / Gestores</h3>
+        <p class="text-xs text-stone-400 mb-4">Acceso administrativo con restricciones</p>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Carga y consulta de contratos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Gestión de alquileres e inquilinos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Registro de pagos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span><strong class="text-red-500">Sin</strong> facturación crítica ni eliminaciones</li>
+        </ul>
+      </div>
+
+      <!-- CM / Consulta -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-6 reveal">
+        <div class="w-11 h-11 rounded-full bg-violet-500 text-white flex items-center justify-center text-sm font-bold mb-4">
+          <i class="fa-solid fa-eye"></i>
+        </div>
+        <h3 class="font-bold text-stone-800 mb-1">CM / Consulta</h3>
+        <p class="text-xs text-stone-400 mb-4">Acceso de lectura solamente</p>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Consulta del estado general de alquileres</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Vista de propiedades con información restringida</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span><strong class="text-red-500">Sin</strong> permisos para facturar ni modificar datos</li>
+        </ul>
+      </div>
+
+      <!-- Propietario -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-6 reveal reveal-d1">
+        <div class="w-11 h-11 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold mb-4">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <h3 class="font-bold text-stone-800 mb-1">Propietario</h3>
+        <p class="text-xs text-stone-400 mb-4">Portal de autogestión</p>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Ver sus propiedades y contratos asociados</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Estado de cobros y pagos recibidos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Historial completo y liquidaciones</li>
+        </ul>
+      </div>
+
+      <!-- Inquilino -->
+      <div class="card-lift bg-warm-50 border border-stone-200/80 rounded-2xl p-6 reveal reveal-d2">
+        <div class="w-11 h-11 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold mb-4">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <h3 class="font-bold text-stone-800 mb-1">Inquilino</h3>
+        <p class="text-xs text-stone-400 mb-4">Portal de autogestión</p>
+        <ul class="space-y-2">
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Consultar contrato y valor del alquiler</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Próximos aumentos y vencimientos</li>
+          <li class="flex items-start gap-2 text-sm text-stone-600"><span class="text-brand-500 font-bold">→</span>Historial de pagos, facturas y recibos</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     5. SIMULACIÓN INTERACTIVA (MOCKUP)
+     ═══════════════════════════════════════════════ -->
+<section id="simulacion" class="py-24 bg-warm-100">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase text-brand-600 mb-3 reveal">
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+        Vista previa del sistema
+        <span class="w-5 h-0.5 bg-brand-400 rounded"></span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-800 mb-4 reveal reveal-d1">Simulación interactiva</h2>
+      <p class="text-stone-500 max-w-xl mx-auto reveal reveal-d2">Explorá cómo se verá cada módulo del sistema por dentro. Hacé clic en la barra lateral para alternar entre vistas.</p>
+    </div>
+
+    <!-- Browser frame -->
+    <div class="reveal">
+      <!-- Browser bar -->
+      <div class="bg-stone-100 border border-stone-200 rounded-t-2xl px-4 py-3 flex items-center gap-3">
+        <div class="flex gap-1.5">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+          <div class="w-3 h-3 rounded-full bg-green-400"></div>
+        </div>
+        <div class="flex-1 bg-white rounded-lg px-4 py-1.5 text-xs text-stone-400 font-mono border border-stone-200 mx-2" id="mockup-url">
+          mad-sistema.app/alquileres
+        </div>
+        <i class="fa-solid fa-bell text-stone-400 text-sm"></i>
+      </div>
+
+      <!-- App container -->
+      <div class="bg-white border border-t-0 border-stone-200 rounded-b-2xl flex min-h-[620px] overflow-hidden shadow-xl shadow-stone-200/50">
+
+        <!-- Sidebar -->
+        <div class="w-56 bg-stone-50 border-r border-stone-200 flex flex-col shrink-0">
+          <!-- Logo -->
+          <div class="px-4 py-4 border-b border-stone-200 flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white text-xs font-extrabold">M</div>
+            <div>
+              <div class="text-sm font-bold text-stone-800 leading-none">MAD</div>
+              <div class="text-[10px] text-stone-400">Gestión Inmobiliaria</div>
+            </div>
+          </div>
+          <!-- Nav items -->
+          <div class="flex-1 py-3 px-2 space-y-0.5">
+            <button onclick="switchModule('alquileres')" class="sidebar-link active w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-stone-500 hover:bg-stone-100 transition-all text-left">
+              <i class="fa-solid fa-file-contract text-xs w-4 text-center"></i>Alquileres
+            </button>
+            <button onclick="switchModule('facturacion')" class="sidebar-link w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-stone-500 hover:bg-stone-100 transition-all text-left">
+              <i class="fa-solid fa-file-invoice text-xs w-4 text-center"></i>Facturación
+            </button>
+            <button onclick="switchModule('propiedades')" class="sidebar-link w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-stone-500 hover:bg-stone-100 transition-all text-left">
+              <i class="fa-solid fa-building text-xs w-4 text-center"></i>Propiedades
+            </button>
+            <button onclick="switchModule('personas')" class="sidebar-link w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-stone-500 hover:bg-stone-100 transition-all text-left">
+              <i class="fa-solid fa-users text-xs w-4 text-center"></i>Propietarios / Inquilinos
+            </button>
+          </div>
+          <!-- User -->
+          <div class="px-4 py-3 border-t border-stone-200 flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold">JM</div>
+            <div>
+              <div class="text-xs font-semibold text-stone-700">Jefa MAD</div>
+              <div class="text-[10px] text-stone-400">Administrador</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main content area -->
+        <div class="flex-1 flex flex-col mockup-scroll overflow-auto">
+
+          <!-- ======================== -->
+          <!-- MODULE: ALQUILERES       -->
+          <!-- ======================== -->
+          <div id="mod-alquileres" class="module-view flex-1">
+            <!-- Topbar -->
+            <div class="topbar-shadow sticky top-0 bg-white z-10 px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-stone-800">Alquileres y Contratos</h2>
+                <p class="text-xs text-stone-400 mt-0.5">119 contratos activos · 3 por vencer · 7 cuotas vencidas</p>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition"><i class="fa-solid fa-filter mr-1.5"></i>Filtrar</button>
+                <button class="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition font-semibold"><i class="fa-solid fa-plus mr-1.5"></i>Nuevo contrato</button>
+              </div>
+            </div>
+            <!-- KPI cards -->
+            <div class="px-6 py-5">
+              <div class="grid grid-cols-4 gap-3 mb-5">
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Contratos activos</div>
+                  <div class="text-2xl font-extrabold text-stone-800">119</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">3 por vencer</div>
+                </div>
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Cobros del mes</div>
+                  <div class="text-2xl font-extrabold text-emerald-600">$8.4M</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">82% de $10.2M</div>
+                </div>
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Próx. actualización</div>
+                  <div class="text-2xl font-extrabold text-amber-500">12</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">ajustes IPC/ICL este mes</div>
+                </div>
+                <div class="bg-red-50 rounded-xl border border-red-100 p-4">
+                  <div class="text-xs text-red-400 mb-1">Cuotas vencidas</div>
+                  <div class="text-2xl font-extrabold text-red-600">7</div>
+                  <div class="text-[10px] text-red-400 mt-0.5">$1.2M pendiente + mora</div>
+                </div>
+              </div>
+              <!-- Contracts table -->
+              <div class="border border-stone-200 rounded-xl overflow-hidden">
+                <div class="px-4 py-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+                  <span class="text-xs font-bold text-stone-700">Contratos activos</span>
+                  <input type="text" placeholder="Buscar contrato…" class="text-xs px-3 py-1.5 border border-stone-200 rounded-lg w-52 bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"/>
+                </div>
+                <table class="w-full text-xs">
+                  <thead class="bg-stone-50 text-stone-400 uppercase tracking-wider">
+                    <tr>
+                      <th class="text-left px-4 py-2.5 font-semibold">Inquilino</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Propiedad</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Alquiler</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Índice</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Estado cuota</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-stone-100">
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Laura Fernández</td>
+                      <td class="px-4 py-3 text-stone-500">Alsina 234, 3° B</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$185.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-semibold">ICL</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px] font-semibold">Vencida hace 3 días</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Editar"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition" title="Eliminar"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Diego Sosa</td>
+                      <td class="px-4 py-3 text-stone-500">Local · Av. Colón 1450</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$420.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-violet-50 text-violet-600 rounded-full text-[10px] font-semibold">IPC</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px] font-semibold">Vencida hace 1 día</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Editar"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition" title="Eliminar"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition bg-amber-50/40">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Carolina Méndez</td>
+                      <td class="px-4 py-3 text-stone-500">Mitre 891, PB</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$195.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-semibold">ICL</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[10px] font-semibold">⚡ Ajuste ICL pendiente</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Editar"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition" title="Eliminar"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Pablo Iglesias</td>
+                      <td class="px-4 py-3 text-stone-500">PH · O'Higgins 567</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$240.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-semibold">ICL</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Al día</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Editar"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition" title="Eliminar"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Martín Rodríguez</td>
+                      <td class="px-4 py-3 text-stone-500">Soler 678, 2° A</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$210.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-violet-50 text-violet-600 rounded-full text-[10px] font-semibold">IPC</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Al día</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Editar"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition" title="Eliminar"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======================== -->
+          <!-- MODULE: FACTURACIÓN      -->
+          <!-- ======================== -->
+          <div id="mod-facturacion" class="module-view flex-1 hidden">
+            <div class="topbar-shadow sticky top-0 bg-white z-10 px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-stone-800">Facturación y Recibos</h2>
+                <p class="text-xs text-stone-400 mt-0.5">Integración con ARCA (AFIP) · Facturas A/B · Recibos de cobro</p>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition"><i class="fa-solid fa-download mr-1.5"></i>Exportar</button>
+                <button class="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition font-semibold"><i class="fa-solid fa-plus mr-1.5"></i>Emitir factura</button>
+              </div>
+            </div>
+            <div class="px-6 py-5">
+              <!-- KPIs -->
+              <div class="grid grid-cols-4 gap-3 mb-5">
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Facturas emitidas</div>
+                  <div class="text-2xl font-extrabold text-stone-800">47</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">Este mes</div>
+                </div>
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Recibos generados</div>
+                  <div class="text-2xl font-extrabold text-stone-800">89</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">De alquiler y honorarios</div>
+                </div>
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Total facturado</div>
+                  <div class="text-2xl font-extrabold text-emerald-600">$2.8M</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">Honorarios del mes</div>
+                </div>
+                <div class="bg-warm-50 rounded-xl border border-stone-100 p-4">
+                  <div class="text-xs text-stone-400 mb-1">Enviados por email</div>
+                  <div class="text-2xl font-extrabold text-blue-500">136</div>
+                  <div class="text-[10px] text-stone-400 mt-0.5">98% entregados</div>
+                </div>
+              </div>
+              <!-- Facturación table -->
+              <div class="border border-stone-200 rounded-xl overflow-hidden">
+                <div class="px-4 py-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
+                  <span class="text-xs font-bold text-stone-700">Últimos comprobantes emitidos</span>
+                  <div class="flex gap-2">
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-600 font-semibold cursor-pointer">Todos</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-medium cursor-pointer hover:bg-stone-200 transition">Facturas A</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-medium cursor-pointer hover:bg-stone-200 transition">Facturas B</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 font-medium cursor-pointer hover:bg-stone-200 transition">Recibos</span>
+                  </div>
+                </div>
+                <table class="w-full text-xs">
+                  <thead class="bg-stone-50 text-stone-400 uppercase tracking-wider">
+                    <tr>
+                      <th class="text-left px-4 py-2.5 font-semibold">Tipo</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Nro.</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Destinatario</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Concepto</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Importe</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Email</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-stone-100">
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold">Factura B</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">0001-00000412</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">Laura Fernández</td>
+                      <td class="px-4 py-3 text-stone-500">Honorarios gestión alquiler</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$18.500</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Enviado</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver PDF"><i class="fa-solid fa-file-pdf text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Reenviar"><i class="fa-solid fa-paper-plane text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold">Factura A</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">0001-00000098</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">Comercial Sosa SRL</td>
+                      <td class="px-4 py-3 text-stone-500">Honorarios gestión local</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$42.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Enviado</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver PDF"><i class="fa-solid fa-file-pdf text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Reenviar"><i class="fa-solid fa-paper-plane text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-bold">Recibo</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">R-2026-0891</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">Pablo Iglesias</td>
+                      <td class="px-4 py-3 text-stone-500">Alquiler agosto + seguro</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$248.000</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full text-[10px] font-semibold">Pendiente</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver PDF"><i class="fa-solid fa-file-pdf text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Enviar"><i class="fa-solid fa-paper-plane text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold">Factura B</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">0001-00000411</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">Carolina Méndez</td>
+                      <td class="px-4 py-3 text-stone-500">Honorarios gestión alquiler</td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$19.500</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Enviado</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Ver PDF"><i class="fa-solid fa-file-pdf text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition" title="Reenviar"><i class="fa-solid fa-paper-plane text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======================== -->
+          <!-- MODULE: PROPIEDADES      -->
+          <!-- ======================== -->
+          <div id="mod-propiedades" class="module-view flex-1 hidden">
+            <div class="topbar-shadow sticky top-0 bg-white z-10 px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-stone-800">Propiedades</h2>
+                <p class="text-xs text-stone-400 mt-0.5">142 totales · 23 disponibles · 119 alquiladas</p>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition"><i class="fa-solid fa-download mr-1.5"></i>Exportar</button>
+                <button class="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition font-semibold"><i class="fa-solid fa-plus mr-1.5"></i>Nueva propiedad</button>
+              </div>
+            </div>
+            <div class="px-6 py-5">
+              <!-- Filters -->
+              <div class="flex items-center gap-2 mb-5 p-3 bg-stone-50 rounded-xl border border-stone-100">
+                <input type="text" placeholder="Buscar dirección…" class="flex-1 text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"/>
+                <select class="text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white text-stone-500 focus:outline-none">
+                  <option>Tipo</option><option>Casa</option><option>Depto</option><option>Local</option><option>PH</option>
+                </select>
+                <select class="text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white text-stone-500 focus:outline-none">
+                  <option>Estado</option><option>Disponible</option><option>Alquilada</option><option>En reparación</option>
+                </select>
+              </div>
+              <!-- Properties table -->
+              <div class="border border-stone-200 rounded-xl overflow-hidden">
+                <table class="w-full text-xs">
+                  <thead class="bg-stone-50 text-stone-400 uppercase tracking-wider">
+                    <tr>
+                      <th class="text-left px-4 py-2.5 font-semibold">Dirección</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Tipo</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Propietario</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Estado</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Servicios</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Alquiler</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-stone-100">
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Belgrano 445, Centro</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-green-50 text-green-700 rounded text-[10px] font-semibold">Casa</span></td>
+                      <td class="px-4 py-3 text-stone-500">Ricardo Gutiérrez</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Disponible</span></td>
+                      <td class="px-4 py-3 text-stone-400"><i class="fa-solid fa-wifi mr-1"></i><i class="fa-solid fa-fire-flame-simple mr-1"></i><i class="fa-solid fa-droplet"></i></td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$280.000</td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Alsina 234, 3° B</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-semibold">Depto</span></td>
+                      <td class="px-4 py-3 text-stone-500">María Torres</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full text-[10px] font-semibold">Alquilada</span></td>
+                      <td class="px-4 py-3 text-stone-400"><i class="fa-solid fa-wifi mr-1"></i><i class="fa-solid fa-droplet mr-1"></i><i class="fa-solid fa-coins"></i></td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$185.000</td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Av. Colón 1450</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-[10px] font-semibold">Local</span></td>
+                      <td class="px-4 py-3 text-stone-500">Inversiones Bahía SA</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full text-[10px] font-semibold">Alquilada</span></td>
+                      <td class="px-4 py-3 text-stone-400"><i class="fa-solid fa-fire-flame-simple mr-1"></i><i class="fa-solid fa-droplet mr-1"></i><i class="fa-solid fa-coins"></i></td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$420.000</td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">O'Higgins 567</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-semibold">PH</span></td>
+                      <td class="px-4 py-3 text-stone-500">Carlos Peralta</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded-full text-[10px] font-semibold">Alquilada</span></td>
+                      <td class="px-4 py-3 text-stone-400"><i class="fa-solid fa-wifi mr-1"></i><i class="fa-solid fa-fire-flame-simple mr-1"></i><i class="fa-solid fa-droplet"></i></td>
+                      <td class="px-4 py-3 font-semibold text-stone-700">$240.000</td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======================== -->
+          <!-- MODULE: PERSONAS         -->
+          <!-- ======================== -->
+          <div id="mod-personas" class="module-view flex-1 hidden">
+            <div class="topbar-shadow sticky top-0 bg-white z-10 px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-bold text-stone-800">Propietarios e Inquilinos</h2>
+                <p class="text-xs text-stone-400 mt-0.5">Gestor de fichas con datos de contacto, garantías y métodos de pago</p>
+              </div>
+              <div class="flex gap-2">
+                <button class="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition"><i class="fa-solid fa-download mr-1.5"></i>Exportar</button>
+                <button class="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition font-semibold"><i class="fa-solid fa-plus mr-1.5"></i>Nueva persona</button>
+              </div>
+            </div>
+            <div class="px-6 py-5">
+              <!-- Filter tabs -->
+              <div class="flex gap-2 mb-5">
+                <span class="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white font-semibold cursor-pointer">Todos</span>
+                <span class="text-xs px-3 py-1.5 rounded-lg bg-stone-100 text-stone-500 font-medium cursor-pointer hover:bg-stone-200 transition">Propietarios</span>
+                <span class="text-xs px-3 py-1.5 rounded-lg bg-stone-100 text-stone-500 font-medium cursor-pointer hover:bg-stone-200 transition">Inquilinos</span>
+                <span class="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 font-medium cursor-pointer hover:bg-red-100 transition">Lista negra</span>
+              </div>
+              <!-- Personas table -->
+              <div class="border border-stone-200 rounded-xl overflow-hidden">
+                <table class="w-full text-xs">
+                  <thead class="bg-stone-50 text-stone-400 uppercase tracking-wider">
+                    <tr>
+                      <th class="text-left px-4 py-2.5 font-semibold">Nombre</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Tipo</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">DNI</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Email</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Método cobro/pago</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Garantes</th>
+                      <th class="text-left px-4 py-2.5 font-semibold">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-stone-100">
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Ricardo Gutiérrez</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-bold">Propietario</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">24.567.890</td>
+                      <td class="px-4 py-3 text-stone-500">rgutierrez@mail.com</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-semibold">Transferencia</span></td>
+                      <td class="px-4 py-3 text-stone-400">—</td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Laura Fernández</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded text-[10px] font-bold">Inquilina</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">35.123.456</td>
+                      <td class="px-4 py-3 text-stone-500">lfernandez@mail.com</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-semibold">Transferencia</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">2 garantes ✓</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">María Torres</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-bold">Propietaria</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">28.901.234</td>
+                      <td class="px-4 py-3 text-stone-500">mtorres@mail.com</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[10px] font-semibold">Efectivo</span></td>
+                      <td class="px-4 py-3 text-stone-400">—</td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-warm-50 transition">
+                      <td class="px-4 py-3 font-semibold text-stone-700">Diego Sosa</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded text-[10px] font-bold">Inquilino</span></td>
+                      <td class="px-4 py-3 font-mono text-stone-500">32.456.789</td>
+                      <td class="px-4 py-3 text-stone-500">dsosa@empresa.com</td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-semibold">Transferencia</span></td>
+                      <td class="px-4 py-3"><span class="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">2 garantes ✓</span></td>
+                      <td class="px-4 py-3 flex gap-1.5">
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-eye text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition"><i class="fa-solid fa-trash text-[10px]"></i></button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- end main content area -->
+      </div><!-- end app container -->
+    </div><!-- end reveal -->
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════ -->
+<footer class="bg-stone-800 text-white py-10 px-6">
+  <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 rounded-lg bg-brand-500 flex items-center justify-center text-white text-xs font-extrabold">M</div>
+      <span class="font-bold">MAD<span class="text-brand-400">.</span></span>
+    </div>
+    <div class="flex gap-6 text-sm text-stone-400">
+      <a href="#portada" class="hover:text-white transition">Inicio</a>
+      <a href="#necesidades" class="hover:text-white transition">Necesidades</a>
+      <a href="#prioridades" class="hover:text-white transition">Prioridades</a>
+      <a href="#roles" class="hover:text-white transition">Roles</a>
+      <a href="#simulacion" class="hover:text-white transition">Simulación</a>
+    </div>
+    <div class="text-xs text-stone-500 font-mono">© 2026 · Propuesta de Sistema de Gestión Inmobiliario</div>
+  </div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════ -->
+<script>
+// ── Module switcher ──
+function switchModule(id) {
+  // Hide all modules
+  document.querySelectorAll('.module-view').forEach(el => el.classList.add('hidden'));
+  // Show selected
+  document.getElementById('mod-' + id).classList.remove('hidden');
+
+  // Update sidebar active
+  document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  // Update URL bar
+  const urls = {
+    alquileres: 'mad-sistema.app/alquileres',
+    facturacion: 'mad-sistema.app/facturacion',
+    propiedades: 'mad-sistema.app/propiedades',
+    personas: 'mad-sistema.app/personas',
+  };
+  document.getElementById('mockup-url').textContent = urls[id] || 'mad-sistema.app/' + id;
+}
+
+// ── Reveal on scroll ──
+document.addEventListener('DOMContentLoaded', () => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('visible');
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Active nav link on scroll ──
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const top = section.offsetTop - 100;
+      if (window.scrollY >= top) current = section.getAttribute('id');
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+  });
+
+  // ── Smooth scroll ──
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+});
+</script>
+</body>
+</html>
