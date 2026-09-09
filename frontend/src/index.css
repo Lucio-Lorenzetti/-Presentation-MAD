@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  /* Misma paleta que Presentación/presentacion.html, para que el sistema
+     real se sienta continuación de la demo de venta. */
+  --color-brand-50: #FFF7ED;
+  --color-brand-100: #FFEDD5;
+  --color-brand-200: #FED7AA;
+  --color-brand-300: #FDBA74;
+  --color-brand-400: #FB923C;
+  --color-brand-500: #F97316;
+  --color-brand-600: #EA580C;
+  --color-brand-700: #C2410C;
+  --color-brand-800: #9A3412;
+  --color-brand-900: #7C2D12;
+
+  --color-warm-50: #FEFDFB;
+  --color-warm-100: #FDF8F0;
+  --color-warm-200: #F5EFE6;
+  --color-warm-300: #E8E0D4;
+  --color-warm-400: #C4B8A8;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+.mockup-scroll::-webkit-scrollbar { width: 5px; }
+.mockup-scroll::-webkit-scrollbar-track { background: #F5F5F4; }
+.mockup-scroll::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 10px; }
+
+.input {
+  @apply w-full border border-stone-200 rounded-lg px-3 py-2 text-sm bg-white
+    focus:outline-none focus:border-brand-300 disabled:bg-stone-50 disabled:text-stone-400;
+}
