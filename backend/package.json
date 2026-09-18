@@ -10,6 +10,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
+    "seed": "node scripts/seed.js",
     "verificar-conexion": "node scripts/verificarConexion.js",
     "emitir-factura-prueba": "node scripts/emitirFacturaPrueba.js"
   },

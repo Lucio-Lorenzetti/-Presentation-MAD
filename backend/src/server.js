@@ -15,6 +15,9 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/facturas', facturasRouter);
+app.use('/api/personas', require('./routes/personas'));
+app.use('/api/propiedades', require('./routes/propiedades'));
+app.use('/api/contratos', require('./routes/contratos'));
 
 app.use((err, req, res, next) => {
   console.error(err);

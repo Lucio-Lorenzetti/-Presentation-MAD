@@ -1,71 +1,112 @@
+import { useState } from 'react';
 import Topbar from '../../components/Topbar';
 import StatCard from '../../components/StatCard';
-import PreviewBanner from '../../components/PreviewBanner';
+import Boton from '../../components/Boton';
+import Estado from '../../components/Estado';
+import NuevoContratoForm from './NuevoContratoForm';
+import ContratoDetalle from './ContratoDetalle';
+import { contratosApi } from '../../api/recursos';
+import { useCarga } from '../../hooks';
+import { dinero } from '../../format';
 
-const contratos = [
-  { inquilino: 'Laura Fernández', propiedad: 'Alsina 234, 3° B', alquiler: '$185.000', indice: 'ICL', estado: 'Vencida hace 3 días', tono: 'danger' },
-  { inquilino: 'Diego Sosa', propiedad: 'Local · Av. Colón 1450', alquiler: '$420.000', indice: 'IPC', estado: 'Vencida hace 1 día', tono: 'danger' },
-  { inquilino: 'Carolina Méndez', propiedad: 'Mitre 891, PB', alquiler: '$195.000', indice: 'ICL', estado: '⚡ Ajuste ICL pendiente', tono: 'warning' },
-  { inquilino: 'Pablo Iglesias', propiedad: "PH · O'Higgins 567", alquiler: '$240.000', indice: 'ICL', estado: 'Al día', tono: 'ok' },
-  { inquilino: 'Martín Rodríguez', propiedad: 'Soler 678, 2° A', alquiler: '$210.000', indice: 'IPC', estado: 'Al día', tono: 'ok' },
-];
-
-const tonos = {
-  danger: 'bg-red-50 text-red-600',
-  warning: 'bg-amber-50 text-amber-600',
-  ok: 'bg-emerald-50 text-emerald-600',
+const indiceTono = { ICL: 'bg-blue-50 text-blue-600', IPC: 'bg-violet-50 text-violet-600', NINGUNO: 'bg-stone-100 text-stone-400' };
+const estadoContratoTono = {
+  ACTIVO: 'bg-emerald-50 text-emerald-600', FINALIZADO: 'bg-stone-100 text-stone-500', RESCINDIDO: 'bg-red-50 text-red-500',
 };
-const indiceTono = { ICL: 'bg-blue-50 text-blue-600', IPC: 'bg-violet-50 text-violet-600' };
+
+function EstadoCuota({ e }) {
+  if (e.tipo === 'VENCIDA') {
+    const extra = e.cantVencidas > 1 ? ` (${e.cantVencidas} cuotas)` : '';
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600">Vencida hace {e.diasMora} día{e.diasMora === 1 ? '' : 's'}{extra}</span>;
+  }
+  if (e.tipo === 'AJUSTE_PENDIENTE') {
+    return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-600">⚡ Ajuste {e.indice} pendiente</span>;
+  }
+  return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600">Al día</span>;
+}
 
 export default function AlquileresPage() {
+  const [q, setQ] = useState('');
+  const [mostrarSolo, setMostrarSolo] = useState('ACTIVO');
+  const [nuevo, setNuevo] = useState(false);
+  const [detalleId, setDetalleId] = useState(null);
+
+  const { datos: contratos, cargando, error, recargar } = useCarga(() => contratosApi.listar({ q, estado: mostrarSolo }), [q, mostrarSolo]);
+  const { datos: r, recargar: recargarResumen } = useCarga(() => contratosApi.resumen(), []);
+
+  const refrescar = () => { recargar(); recargarResumen(); };
+  const pct = r && r.esperadoMes > 0 ? Math.round((r.cobrosMes / r.esperadoMes) * 100) : 0;
+
   return (
     <div className="flex-1 flex flex-col">
-      <Topbar title="Alquileres y Contratos" subtitle="119 contratos activos · 3 por vencer · 7 cuotas vencidas">
-        <button className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition"><i className="fa-solid fa-filter mr-1.5"></i>Filtrar</button>
-        <button className="text-xs px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition font-semibold"><i className="fa-solid fa-plus mr-1.5"></i>Nuevo contrato</button>
+      <Topbar
+        title="Alquileres y Contratos"
+        subtitle={r ? `${r.contratosActivos} contratos activos · ${r.porVencer} por vencer · ${r.cuotasVencidas} cuotas vencidas` : ' '}
+      >
+        <Boton onClick={() => setNuevo(true)}><i className="fa-solid fa-plus mr-1.5"></i>Nuevo contrato</Boton>
       </Topbar>
-
-      <PreviewBanner />
 
       <div className="px-6 py-5">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <StatCard label="Contratos activos" value="119" hint="3 por vencer" />
-          <StatCard label="Cobros del mes" value="$8.4M" hint="82% de $10.2M" tone="success" />
-          <StatCard label="Próx. actualización" value="12" hint="ajustes IPC/ICL este mes" />
-          <StatCard label="Cuotas vencidas" value="7" hint="$1.2M pendiente + mora" tone="danger" />
+          <StatCard label="Contratos activos" value={r?.contratosActivos ?? '—'} hint={r ? `${r.porVencer} por vencer (60 días)` : ''} />
+          <StatCard label="Cobros del mes" value={r ? dinero(r.cobrosMes) : '—'} hint={r ? `${pct}% de ${dinero(r.esperadoMes)}` : ''} tone="success" />
+          <StatCard label="Ajustes pendientes" value={r?.ajustesPendientes ?? '—'} hint="IPC/ICL a aplicar" />
+          <StatCard label="Cuotas vencidas" value={r?.cuotasVencidas ?? '—'} hint={r ? `${dinero(r.montoVencidoConMora)} con mora` : ''} tone="danger" />
         </div>
 
         <div className="border border-stone-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between">
-            <span className="text-xs font-bold text-stone-700">Contratos activos</span>
-            <input type="text" placeholder="Buscar contrato…" className="text-xs px-3 py-1.5 border border-stone-200 rounded-lg w-52 bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300" />
+          <div className="px-4 py-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-3">
+            <select value={mostrarSolo} onChange={e => setMostrarSolo(e.target.value)} className="text-xs px-2 py-1.5 border border-stone-200 rounded-lg bg-white text-stone-500">
+              <option value="ACTIVO">Contratos activos</option>
+              <option value="FINALIZADO">Finalizados</option>
+              <option value="RESCINDIDO">Rescindidos</option>
+              <option value="">Todos</option>
+            </select>
+            <input
+              type="text" placeholder="Buscar inquilino o propiedad…" value={q} onChange={e => setQ(e.target.value)}
+              className="text-xs px-3 py-1.5 border border-stone-200 rounded-lg w-64 bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
+            />
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
-                <tr>
-                  <th className="text-left px-4 py-2.5 font-semibold">Inquilino</th>
-                  <th className="text-left px-4 py-2.5 font-semibold">Propiedad</th>
-                  <th className="text-left px-4 py-2.5 font-semibold">Alquiler</th>
-                  <th className="text-left px-4 py-2.5 font-semibold">Índice</th>
-                  <th className="text-left px-4 py-2.5 font-semibold">Estado cuota</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {contratos.map((c, i) => (
-                  <tr key={i} className="hover:bg-warm-50 transition">
-                    <td className="px-4 py-3 font-semibold text-stone-700">{c.inquilino}</td>
-                    <td className="px-4 py-3 text-stone-500">{c.propiedad}</td>
-                    <td className="px-4 py-3 font-semibold text-stone-700">{c.alquiler}</td>
-                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${indiceTono[c.indice]}`}>{c.indice}</span></td>
-                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${tonos[c.tono]}`}>{c.estado}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
+          {(cargando && !contratos) || error || (contratos && contratos.length === 0)
+            ? <div className="p-2"><Estado cargando={cargando && !contratos} error={error} vacio={contratos && contratos.length === 0} mensajeVacio="No hay contratos para mostrar." /></div>
+            : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="text-left px-4 py-2.5 font-semibold">Inquilino</th>
+                      <th className="text-left px-4 py-2.5 font-semibold">Propiedad</th>
+                      <th className="text-left px-4 py-2.5 font-semibold">Alquiler</th>
+                      <th className="text-left px-4 py-2.5 font-semibold">Índice</th>
+                      <th className="text-left px-4 py-2.5 font-semibold">Estado cuota</th>
+                      <th className="px-4 py-2.5"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {contratos.map(c => (
+                      <tr key={c.id} className="hover:bg-warm-50 transition cursor-pointer" onClick={() => setDetalleId(c.id)}>
+                        <td className="px-4 py-3 font-semibold text-stone-700">{c.inquilino_nombre}</td>
+                        <td className="px-4 py-3 text-stone-500">{c.propiedad_direccion}</td>
+                        <td className="px-4 py-3 font-semibold text-stone-700">{dinero(c.monto_actual)}</td>
+                        <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${indiceTono[c.indice]}`}>{c.indice === 'NINGUNO' ? 'Sin índice' : c.indice}</span></td>
+                        <td className="px-4 py-3">
+                          {c.estado === 'ACTIVO'
+                            ? <EstadoCuota e={c.estadoCuota} />
+                            : <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${estadoContratoTono[c.estado]}`}>{c.estado.charAt(0) + c.estado.slice(1).toLowerCase()}</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right text-stone-300"><i className="fa-solid fa-chevron-right"></i></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
         </div>
       </div>
+
+      {nuevo && <NuevoContratoForm onCerrar={() => setNuevo(false)} onCreado={() => { setNuevo(false); refrescar(); }} />}
+      {detalleId && <ContratoDetalle id={detalleId} onCerrar={() => setDetalleId(null)} onCambio={refrescar} />}
     </div>
   );
 }

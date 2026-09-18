@@ -36,4 +36,8 @@ db.exec(`
   );
 `);
 
+const crearEsquema = require('./schema');
+crearEsquema(db);
+crearEsquema.migrar(db);
+
 module.exports = db;
