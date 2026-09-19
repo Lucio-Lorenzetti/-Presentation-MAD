@@ -1,3 +1,4 @@
+import { abrirPdf } from '../../api/client';
 const LETRA_POR_TIPO = { 1: 'A', 6: 'B', 11: 'C' };
 
 export default function FacturasTable({ facturas, cargando }) {
@@ -51,13 +52,13 @@ export default function FacturasTable({ facturas, cargando }) {
                 </td>
                 <td className="px-4 py-3">
                   {f.resultado === 'A' && (
-                    <a
-                      href={`/api/facturas/${f.id}/pdf`} target="_blank" rel="noreferrer"
+                    <button
+                      onClick={() => abrirPdf(f.id).catch(e => window.alert(e.message))}
                       className="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"
                       title="Ver PDF"
                     >
                       <i className="fa-solid fa-file-pdf text-[10px]"></i>
-                    </a>
+                    </button>
                   )}
                 </td>
               </tr>

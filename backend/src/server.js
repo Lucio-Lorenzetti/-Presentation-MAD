@@ -14,15 +14,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.use('/api/facturas', facturasRouter);
-app.use('/api/personas', require('./routes/personas'));
-app.use('/api/propiedades', require('./routes/propiedades'));
-app.use('/api/contratos', require('./routes/contratos'));
+app.use('/api/auth', require('./routes/auth'));
+
+// Todo lo que sigue requiere sesión y se filtra por rol (ver middleware/auth.js).
+const { autenticar, autorizar } = require('./middleware/auth');
+app.use('/api/facturas', autenticar, autorizar, facturasRouter);
+app.use('/api/usuarios', autenticar, autorizar, require('./routes/usuarios'));
+app.use('/api/personas', autenticar, autorizar, require('./routes/personas'));
+app.use('/api/propiedades', autenticar, autorizar, require('./routes/propiedades'));
+app.use('/api/contratos', autenticar, autorizar, require('./routes/contratos'));
 
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: 'Error interno' });
 });
+
+require('./services/authService').asegurarAdminInicial();
 
 app.listen(config.port, () => {
   console.log(`Facturación ARCA escuchando en http://localhost:${config.port}`);

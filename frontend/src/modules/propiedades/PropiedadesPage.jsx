@@ -8,6 +8,7 @@ import { descargarCSV } from '../../csv';
 import { propiedadesApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 import { dinero } from '../../format';
+import { useAuth } from '../../auth';
 
 const TIPOS = { CASA: 'Casa', DEPTO: 'Depto', LOCAL: 'Local', PH: 'PH' };
 const ESTADOS = { DISPONIBLE: 'Disponible', ALQUILADA: 'Alquilada', EN_REPARACION: 'En reparación' };
@@ -20,6 +21,7 @@ const estadoTono = {
 };
 
 export default function PropiedadesPage() {
+  const { puede } = useAuth();
   const [q, setQ] = useState('');
   const [tipo, setTipo] = useState('');
   const [estado, setEstado] = useState('');
@@ -64,7 +66,7 @@ export default function PropiedadesPage() {
         subtitle={resumen ? `${resumen.total} totales · ${resumen.disponibles} disponibles · ${resumen.alquiladas} alquiladas` : ' '}
       >
         <Boton variante="secundario" disabled={!props?.length} onClick={exportar}><i className="fa-solid fa-download mr-1.5"></i>Exportar</Boton>
-        <Boton onClick={() => setEditando('nueva')}><i className="fa-solid fa-plus mr-1.5"></i>Nueva propiedad</Boton>
+        {puede('escribir') && <Boton onClick={() => setEditando('nueva')}><i className="fa-solid fa-plus mr-1.5"></i>Nueva propiedad</Boton>}
       </Topbar>
 
       <div className="px-6 py-5">
@@ -112,8 +114,8 @@ export default function PropiedadesPage() {
                       <td className="px-4 py-3 text-stone-500">{p.servicios || '—'}</td>
                       <td className="px-4 py-3 font-semibold text-stone-700">{dinero(p.alquiler_actual ?? p.alquiler_sugerido)}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button onClick={e => { e.stopPropagation(); setEditando(p); }} className="text-stone-400 hover:text-brand-600 mr-3" title="Editar"><i className="fa-solid fa-pen"></i></button>
-                        <button onClick={e => { e.stopPropagation(); eliminar(p); }} className="text-stone-400 hover:text-red-500" title="Eliminar"><i className="fa-solid fa-trash"></i></button>
+                        {puede('escribir') && <button onClick={e => { e.stopPropagation(); setEditando(p); }} className="text-stone-400 hover:text-brand-600 mr-3" title="Editar"><i className="fa-solid fa-pen"></i></button>}
+                        {puede('eliminar') && <button onClick={e => { e.stopPropagation(); eliminar(p); }} className="text-stone-400 hover:text-red-500" title="Eliminar"><i className="fa-solid fa-trash"></i></button>}
                       </td>
                     </tr>
                   ))}

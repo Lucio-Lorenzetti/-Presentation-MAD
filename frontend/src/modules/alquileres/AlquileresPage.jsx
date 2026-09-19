@@ -8,6 +8,7 @@ import ContratoDetalle from './ContratoDetalle';
 import { contratosApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 import { dinero } from '../../format';
+import { useAuth } from '../../auth';
 
 const indiceTono = { ICL: 'bg-blue-50 text-blue-600', IPC: 'bg-violet-50 text-violet-600', NINGUNO: 'bg-stone-100 text-stone-400' };
 const estadoContratoTono = {
@@ -26,6 +27,7 @@ function EstadoCuota({ e }) {
 }
 
 export default function AlquileresPage() {
+  const { puede } = useAuth();
   const [q, setQ] = useState('');
   const [mostrarSolo, setMostrarSolo] = useState('ACTIVO');
   const [nuevo, setNuevo] = useState(false);
@@ -43,7 +45,7 @@ export default function AlquileresPage() {
         title="Alquileres y Contratos"
         subtitle={r ? `${r.contratosActivos} contratos activos · ${r.porVencer} por vencer · ${r.cuotasVencidas} cuotas vencidas` : ' '}
       >
-        <Boton onClick={() => setNuevo(true)}><i className="fa-solid fa-plus mr-1.5"></i>Nuevo contrato</Boton>
+        {puede('escribir') && <Boton onClick={() => setNuevo(true)}><i className="fa-solid fa-plus mr-1.5"></i>Nuevo contrato</Boton>}
       </Topbar>
 
       <div className="px-6 py-5">

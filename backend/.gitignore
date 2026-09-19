@@ -7,3 +7,4 @@ certs/*.csr
 data/*.db
 storage/facturas/*.pdf
 .wsaa-cache/
+data/.jwt-secret

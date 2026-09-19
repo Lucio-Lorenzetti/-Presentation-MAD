@@ -8,6 +8,7 @@ import { descargarCSV } from '../../csv';
 import { formatDni } from '../../format';
 import { personasApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
+import { useAuth } from '../../auth';
 
 const tipoTono = {
   PROPIETARIO: 'bg-amber-50 text-amber-700',
@@ -23,6 +24,7 @@ const filtros = [
 ];
 
 export default function PersonasPage() {
+  const { puede } = useAuth();
   const [filtro, setFiltro] = useState('todos');
   const [q, setQ] = useState('');
   const [editando, setEditando] = useState(null); // null | 'nueva' | persona
@@ -61,7 +63,7 @@ export default function PersonasPage() {
     <div className="flex-1 flex flex-col">
       <Topbar title="Propietarios e Inquilinos" subtitle="Gestor de fichas con datos de contacto, garantías y métodos de pago">
         <Boton variante="secundario" disabled={!personas?.length} onClick={exportar}><i className="fa-solid fa-download mr-1.5"></i>Exportar</Boton>
-        <Boton onClick={() => setEditando('nueva')}><i className="fa-solid fa-plus mr-1.5"></i>Nueva persona</Boton>
+        {puede('escribir') && <Boton onClick={() => setEditando('nueva')}><i className="fa-solid fa-plus mr-1.5"></i>Nueva persona</Boton>}
       </Topbar>
 
       <div className="px-6 py-5">
@@ -125,8 +127,8 @@ export default function PersonasPage() {
                         ? `${p.cant_propiedades} propiedad${p.cant_propiedades === 1 ? '' : 'es'}`
                         : p.cant_garantes > 0 ? `${p.cant_garantes} garante${p.cant_garantes > 1 ? 's' : ''} ✓` : '—'}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <button onClick={e => { e.stopPropagation(); setEditando(p); }} className="text-stone-400 hover:text-brand-600 mr-3" title="Editar"><i className="fa-solid fa-pen"></i></button>
-                        <button onClick={e => { e.stopPropagation(); eliminar(p); }} className="text-stone-400 hover:text-red-500" title="Eliminar"><i className="fa-solid fa-trash"></i></button>
+                        {puede('escribir') && <button onClick={e => { e.stopPropagation(); setEditando(p); }} className="text-stone-400 hover:text-brand-600 mr-3" title="Editar"><i className="fa-solid fa-pen"></i></button>}
+                        {puede('eliminar') && <button onClick={e => { e.stopPropagation(); eliminar(p); }} className="text-stone-400 hover:text-red-500" title="Eliminar"><i className="fa-solid fa-trash"></i></button>}
                       </td>
                     </tr>
                   ))}

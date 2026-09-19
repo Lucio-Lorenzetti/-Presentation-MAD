@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { facturasApi } from '../../api/facturas';
-import { ApiError } from '../../api/client';
+import { ApiError, abrirPdf } from '../../api/client';
 
 const DOC_TIPOS = [
   { value: 'CUIT', label: 'CUIT' },
@@ -190,12 +190,13 @@ function ResultadoEmision({ resultado, onNueva, onCerrar }) {
 
       <div className="flex gap-2">
         {f.resultado === 'A' && (
-          <a
-            href={`/api/facturas/${f.id}/pdf`} target="_blank" rel="noreferrer"
+          <button
+            type="button"
+            onClick={() => abrirPdf(f.id).catch(e => window.alert(e.message))}
             className="flex-1 text-center bg-brand-500 hover:bg-brand-600 text-white rounded-lg py-2.5 font-semibold transition"
           >
             <i className="fa-solid fa-file-pdf mr-1.5"></i>Ver PDF
-          </a>
+          </button>
         )}
         <button onClick={onCerrar} className="flex-1 border border-stone-200 rounded-lg py-2.5 font-semibold text-stone-600 hover:bg-stone-50">
           Cerrar

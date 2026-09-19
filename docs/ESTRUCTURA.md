@@ -47,12 +47,27 @@ nunca calcula reglas de negocio (mora, ajustes) — las devuelve el backend.
 | Personas (propietarios/inquilinos/garantes) | ✅ | ✅ | |
 | Propiedades | ✅ | ✅ | |
 | Contratos + cuotas + pagos | ✅ | ✅ | Mora 0,5 % diario, ajuste manual IPC/ICL |
+| Login + roles + usuarios | ✅ | ✅ | Ver matriz de permisos abajo |
+
+## Roles y permisos
+
+Se aplican en el backend (`backend/src/middleware/auth.js`); el frontend sólo oculta lo que daría 403.
+
+| Acción | Desarrollador | Administrador | Gestor | Consulta |
+|---|:-:|:-:|:-:|:-:|
+| Ver alquileres, propiedades, personas | ✅ | ✅ | ✅ | ✅ |
+| Crear / editar (contratos, pagos, personas, propiedades) | ✅ | ✅ | ✅ | ❌ |
+| Eliminar | ✅ | ✅ | ❌ | ❌ |
+| Facturación ARCA | ✅ | ✅ | ❌ | ❌ |
+| Gestionar usuarios | ✅ | ✅ (no Desarrollador) | ❌ | ❌ |
+
+Sesión: token firmado de 8 h, contraseñas con scrypt, bloqueo tras 5 intentos fallidos. Los roles Propietario/Inquilino (portales) llegan en la Fase 2.
 
 ## Hoja de ruta (según prioridades de la presentación)
 
 **Fase 1 — MVP (prioridad alta)**
 1. ✅ Personas, Propiedades, Contratos, Pagos con mora
-2. Auth + roles (Desarrollador, Administrador, Gestor, Consulta) — bloquea el resto
+2. ✅ Auth + roles (Desarrollador, Administrador, Gestor, Consulta)
 3. Recibos de alquiler/honorarios en PDF (reusar `pdfService`) + vincular facturación a contrato/pago
 4. Índices IPC/ICL automáticos (traer valores oficiales y proponer el ajuste)
 5. Notificaciones por email (vencimientos 15 días antes, mora, ajustes) + job programado

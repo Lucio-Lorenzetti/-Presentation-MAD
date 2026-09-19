@@ -3,9 +3,11 @@ import Modal from '../../components/Modal';
 import Boton from '../../components/Boton';
 import { personasApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
+import { useAuth } from '../../auth';
 import { dinero, fecha, formatCuit, formatDni } from '../../format';
 
 export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
+  const { puede } = useAuth();
   const { datos: p, cargando, error, recargar } = useCarga(() => personasApi.obtener(id), [id]);
   const [nuevo, setNuevo] = useState(null); // { nombre, dni, telefono } | null
   const [errorAccion, setErrorAccion] = useState(null);
@@ -90,7 +92,7 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
 
                 <Seccion
                   titulo={`Garantes (${p.garantes.length})`}
-                  accion={!nuevo && <button className="text-xs text-brand-600 hover:underline" onClick={() => setNuevo({ nombre: '', dni: '', telefono: '' })}>+ Agregar</button>}
+                  accion={!nuevo && puede('escribir') && <button className="text-xs text-brand-600 hover:underline" onClick={() => setNuevo({ nombre: '', dni: '', telefono: '' })}>+ Agregar</button>}
                 >
                   {p.garantes.length === 0 && !nuevo && <Vacio>Sin garantes cargados.</Vacio>}
                   {p.garantes.map(g => (
@@ -98,7 +100,7 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
                       <span className="font-semibold text-stone-700">{g.nombre}</span>
                       <span className="text-stone-400">
                         {[g.dni && `DNI ${formatDni(g.dni)}`, g.tipo_garantia, g.telefono].filter(Boolean).join(' · ')}
-                        <button className="ml-3 text-stone-300 hover:text-red-500" onClick={() => quitarGarante(g)} title="Quitar"><i className="fa-solid fa-xmark"></i></button>
+                        {puede('escribir') && <button className="ml-3 text-stone-300 hover:text-red-500" onClick={() => quitarGarante(g)} title="Quitar"><i className="fa-solid fa-xmark"></i></button>}
                       </span>
                     </Fila>
                   ))}
@@ -118,8 +120,8 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
             )}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-stone-100">
-              <Boton variante="peligro" onClick={eliminar}>Eliminar</Boton>
-              <Boton onClick={() => onEditar(p)}>Editar</Boton>
+              {puede('eliminar') && <Boton variante="peligro" onClick={eliminar}>Eliminar</Boton>}
+              {puede('escribir') && <Boton onClick={() => onEditar(p)}>Editar</Boton>}
             </div>
           </>
         )}

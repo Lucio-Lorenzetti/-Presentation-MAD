@@ -25,6 +25,17 @@ if (reset) {
 
 const hoy = hoyISO();
 
+// ── Usuarios demo (uno por rol). No se borran con --reset. Contraseña: demo1234 ──
+const auth = require('../src/services/authService');
+for (const [nombre, email, rol] of [
+  ['Administrador', 'admin@mad.local', 'ADMINISTRADOR'],
+  ['Desarrollador', 'dev@mad.local', 'DESARROLLADOR'],
+  ['Gestor Demo', 'gestor@mad.local', 'GESTOR'],
+  ['Consulta Demo', 'consulta@mad.local', 'CONSULTA'],
+]) {
+  if (!db.prepare('SELECT 1 FROM usuarios WHERE email = ?').get(email)) auth.crearUsuario({ nombre, email, rol, password: 'demo1234' });
+}
+
 // ── Propietarios ─────────────────────────────────────────────────────────────
 const prop = {};
 for (const p of [

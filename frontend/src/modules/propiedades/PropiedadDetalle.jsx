@@ -4,11 +4,13 @@ import { propiedadesApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 import { dinero, fecha } from '../../format';
 import { useState } from 'react';
+import { useAuth } from '../../auth';
 
 const TIPOS = { CASA: 'Casa', DEPTO: 'Depto', LOCAL: 'Local', PH: 'PH' };
 const ESTADOS = { DISPONIBLE: 'Disponible', ALQUILADA: 'Alquilada', EN_REPARACION: 'En reparación' };
 
 export default function PropiedadDetalle({ id, onCerrar, onEditar, onCambio }) {
+  const { puede } = useAuth();
   const { datos: p, cargando, error } = useCarga(() => propiedadesApi.obtener(id), [id]);
   const [errorAccion, setErrorAccion] = useState(null);
 
@@ -71,8 +73,8 @@ export default function PropiedadDetalle({ id, onCerrar, onEditar, onCambio }) {
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-stone-100">
-              <Boton variante="peligro" onClick={eliminar}>Eliminar</Boton>
-              <Boton onClick={() => onEditar(p)}>Editar</Boton>
+              {puede('eliminar') && <Boton variante="peligro" onClick={eliminar}>Eliminar</Boton>}
+              {puede('escribir') && <Boton onClick={() => onEditar(p)}>Editar</Boton>}
             </div>
           </>
         )}

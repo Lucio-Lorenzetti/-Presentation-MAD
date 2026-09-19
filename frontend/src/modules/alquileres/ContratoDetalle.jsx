@@ -4,8 +4,10 @@ import Boton from '../../components/Boton';
 import { contratosApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 import { dinero, fecha } from '../../format';
+import { useAuth } from '../../auth';
 
 export default function ContratoDetalle({ id, onCerrar, onCambio }) {
+  const { puede } = useAuth();
   const { datos: c, cargando, error, recargar } = useCarga(() => contratosApi.obtener(id), [id]);
   const [porcentaje, setPorcentaje] = useState('');
   const [errorAccion, setErrorAccion] = useState(null);
@@ -47,7 +49,7 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
   const cuotas = c?.cuotas || [];
   const proximaImpaga = cuotas.filter(q => q.estado === 'PENDIENTE');
   const visibles = verTodas ? cuotas : cuotas.filter(q => q.estado === 'PENDIENTE').slice(0, 6);
-  const activo = c?.estado === 'ACTIVO';
+  const activo = c?.estado === 'ACTIVO' && puede('escribir');
 
   return (
     <Modal titulo={c ? `${c.inquilino_nombre} — ${c.propiedad_direccion}` : 'Contrato'} onCerrar={onCerrar} ancho="max-w-3xl">

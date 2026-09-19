@@ -35,3 +35,10 @@ export const contratosApi = {
   cerrar: (id, estado) => api.post(`/api/contratos/${id}/cierre`, { estado }),
   pagarCuota: (cuotaId, data) => api.post(`/api/contratos/cuotas/${cuotaId}/pagos`, data),
 };
+
+export const usuariosApi = {
+  listar: () => api.get('/api/usuarios'),
+  crear: data => api.post('/api/usuarios', data),
+  actualizar: (id, data) => api.put(`/api/usuarios/${id}`, data),
+  cambiarPassword: (actual, nueva) => api.post('/api/auth/password', { actual, nueva }),
+};

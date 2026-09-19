@@ -79,6 +79,16 @@ module.exports = function crearEsquema(db) {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      password_hash TEXT NOT NULL,
+      rol TEXT NOT NULL CHECK (rol IN ('DESARROLLADOR','ADMINISTRADOR','GESTOR','CONSULTA')),
+      activo INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS ajustes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       contrato_id INTEGER NOT NULL REFERENCES contratos(id),
