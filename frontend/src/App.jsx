@@ -8,6 +8,7 @@ import PersonasPage from './modules/personas/PersonasPage';
 import UsuariosPage from './modules/usuarios/UsuariosPage';
 import EstadisticasPage from './modules/estadisticas/EstadisticasPage';
 import InicioPage from './modules/inicio/InicioPage';
+import MapaPage from './modules/mapa/MapaPage';
 import { useAuth } from './auth';
 
 export default function App() {
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/estadisticas" element={<EstadisticasPage />} />
           <Route path="/alquileres" element={<AlquileresPage />} />
           <Route path="/propiedades" element={<PropiedadesPage />} />
+          <Route path="/mapa" element={<MapaPage />} />
           <Route path="/personas" element={<PersonasPage />} />
           {puede('facturar') && <Route path="/facturacion" element={<FacturacionPage />} />}
           {puede('usuarios') && <Route path="/usuarios" element={<UsuariosPage />} />}

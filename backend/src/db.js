@@ -1,43 +1,88 @@
-const path = require('path');
-const fs = require('fs');
-const { DatabaseSync } = require('node:sqlite'); // Requiere Node >= 22.5 (incluido en Node, sin dependencias nativas)
+// Conexión a Postgres (gestionado, ej. Supabase) vía `pg`. Expone un shim
+// con la misma forma que usaba node:sqlite (`db.prepare(sql).get/all/run`)
+// para no tener que reescribir cada query a mano — sólo se le agrega
+// `async`/`await` a cada llamada existente.
+const { Pool, types } = require('pg');
+const { config } = require('./config');
+const { crearEsquema, migrar } = require('./schema');
 
-const DATA_DIR = path.resolve(process.cwd(), 'data');
-fs.mkdirSync(DATA_DIR, { recursive: true });
+// Postgres devuelve COUNT(*)/SUM(entero) como bigint (OID 20), y pg lo
+// parsea como string por defecto para no perder precisión más allá de
+// Number.MAX_SAFE_INTEGER. Acá nunca se llega ni cerca de eso (son conteos
+// y sumas de pesos), así que se parsea como number para no romper el resto
+// del código (aritmética, JSON al frontend) que ya esperaba un número.
+types.setTypeParser(20, v => parseInt(v, 10));
 
-const db = new DatabaseSync(path.join(DATA_DIR, 'facturacion.db'));
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS facturas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    ambiente TEXT NOT NULL,               -- 'homologacion' | 'produccion'
-    cbte_tipo INTEGER NOT NULL,
-    pto_vta INTEGER NOT NULL,
-    numero INTEGER NOT NULL,
-    fecha TEXT NOT NULL,                  -- yyyymmdd
-    concepto INTEGER NOT NULL,
-    receptor_doc_tipo INTEGER NOT NULL,
-    receptor_doc_nro TEXT NOT NULL,
-    receptor_razon_social TEXT,
-    receptor_condicion_iva TEXT NOT NULL,
-    descripcion TEXT,
-    periodo_desde TEXT,
-    periodo_hasta TEXT,
-    fch_vto_pago TEXT,
-    importe_neto REAL NOT NULL,
-    importe_iva REAL NOT NULL,
-    importe_total REAL NOT NULL,
-    resultado TEXT NOT NULL,              -- 'A' | 'R'
-    cae TEXT,
-    cae_vencimiento TEXT,
-    observaciones TEXT,                   -- JSON
-    pdf_path TEXT,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+if (!config.database.url) {
+  throw new Error(
+    'Falta DATABASE_URL en el .env. Necesitás el connection string de Postgres ' +
+    '(ej. Supabase → Project Settings → Database → Connection string → Session pooler).'
   );
-`);
+}
 
-const crearEsquema = require('./schema');
-crearEsquema(db);
-crearEsquema.migrar(db);
+const pool = new Pool({
+  connectionString: config.database.url,
+  ssl: config.database.ssl ? { rejectUnauthorized: false } : false,
+});
+
+// '?' posicional (como usaba node:sqlite) → '$1, $2, ...' (lo que espera pg).
+function aPosicional(sql) {
+  let i = 0;
+  return sql.replace(/\?/g, () => `$${++i}`);
+}
+
+// A los INSERT que no pidan explícitamente otra cosa les agregamos
+// `RETURNING id`, así el shim puede devolver `lastInsertRowid` como antes.
+function conReturning(sql) {
+  const esInsert = /^\s*insert\s+into/i.test(sql);
+  if (esInsert && !/returning/i.test(sql)) return `${sql} RETURNING id`;
+  return sql;
+}
+
+// `queryable` es el pool (fuera de una transacción) o un client dedicado
+// (dentro de una transacción) — ambos exponen `.query(text, params)`.
+function shim(queryable) {
+  return {
+    prepare(sql) {
+      const texto = conReturning(aPosicional(sql));
+      return {
+        get: async (...params) => (await queryable.query(texto, params)).rows[0],
+        all: async (...params) => (await queryable.query(texto, params)).rows,
+        run: async (...params) => {
+          const r = await queryable.query(texto, params);
+          return { lastInsertRowid: r.rows[0]?.id, changes: r.rowCount };
+        },
+      };
+    },
+    exec: sql => queryable.query(sql),
+  };
+}
+
+const db = shim(pool);
+
+// Corre `fn(tx)` dentro de una transacción real (cliente dedicado del pool,
+// no se puede transaccionar sobre conexiones compartidas).
+db.transaccion = async fn => {
+  const client = await pool.connect();
+  const tx = shim(client);
+  try {
+    await client.query('BEGIN');
+    const resultado = await fn(tx);
+    await client.query('COMMIT');
+    return resultado;
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+};
+
+// Crea las tablas (si no existen) y aplica las migraciones livianas.
+// Hay que esperarlo antes de levantar el server o correr los scripts.
+db.inicializar = async () => {
+  await crearEsquema(db);
+  await migrar(db);
+};
 
 module.exports = db;

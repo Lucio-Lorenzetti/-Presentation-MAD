@@ -7,17 +7,17 @@ Cada módulo de negocio existe en **los dos lados con el mismo nombre**.
 .
 ├── Presentación/          # Propuesta comercial (HTML) + relevamiento. No se toca.
 ├── docs/                  # Este documento y futuras decisiones de diseño
-├── backend/               # API REST (Node 22+, Express, SQLite nativo)
+├── backend/               # API REST (Node 22+, Express, Postgres/Supabase)
 │   ├── src/
 │   │   ├── server.js      # Arranque + montaje de rutas
 │   │   ├── config.js      # Variables de entorno
-│   │   ├── db.js          # Conexión SQLite (+ tabla facturas)
-│   │   ├── schema.js      # Tablas de gestión
+│   │   ├── db.js          # Pool de Postgres + shim de compatibilidad (prepare/transaccion)
+│   │   ├── schema.js      # Tablas (todas, incluida facturas)
 │   │   ├── routes/        # HTTP: parsear request, llamar al service, responder
-│   │   ├── services/      # Lógica de negocio (una por módulo)
+│   │   ├── services/      # Lógica de negocio (una por módulo, todas async)
 │   │   └── utils/         # fechas/mora, validación, códigos AFIP
-│   ├── scripts/           # Utilidades (verificar ARCA, factura de prueba)
-│   └── certs/ storage/ data/   # Cert ARCA, PDFs, base .db (no se versionan)
+│   ├── scripts/           # Utilidades (seed, geocodificar, verificar ARCA, factura de prueba)
+│   └── certs/ storage/    # Cert ARCA, PDFs generados (no se versionan)
 └── frontend/              # React 19 + Vite + Tailwind 4
     └── src/
         ├── modules/<modulo>/   # Página + formularios de cada módulo
@@ -48,7 +48,9 @@ nunca calcula reglas de negocio (mora, ajustes) — las devuelve el backend.
 | Recibos de pago (no fiscales) + envío por WhatsApp | ✅ | ✅ | PDF por pago (`storage/recibos/`); WhatsApp = wa.me precargado + descarga manual del PDF (sin API de Meta) |
 | Personas (propietarios/inquilinos/garantes) | ✅ | ✅ | |
 | Propiedades | ✅ | ✅ | |
-| Contratos + cuotas + pagos | ✅ | ✅ | Mora 0,5 % diario, ajuste manual IPC/ICL |
+| Contratos + cuotas + pagos | ✅ | ✅ | Mora 0,5 % diario; ajuste IPC/ICL resuelto automático vía API del BCRA (con respaldo manual si la API falla) |
+| Ficha de contrato en PDF | ✅ | ✅ | Resumen de gestión (no es el contrato legal con cláusulas) — se genera al vuelo, no se guarda |
+| Mapa de propiedades | ✅ | ✅ | Leaflet + OpenStreetMap, geocodificación automática (Nominatim) al alta/edición de cada propiedad |
 | Estadísticas (dashboard) | ✅ | ✅ | Cobrado vs facturado por mes, propiedades por estado, top deudores |
 | Exportación a Excel (.xlsx) | — | ✅ | Personas, Propiedades, Alquileres, Facturación, Estadísticas |
 | Login + roles + usuarios | ✅ | ✅ | Ver matriz de permisos abajo |
@@ -73,12 +75,12 @@ Sesión: token firmado de 8 h, contraseñas con scrypt, bloqueo tras 5 intentos 
 1. ✅ Personas, Propiedades, Contratos, Pagos con mora
 2. ✅ Auth + roles (Desarrollador, Administrador, Gestor, Consulta)
 3. ✅ Recibos de pago en PDF (reusa `pdfService`) vinculados al pago de cada cuota, con envío por WhatsApp (chat precargado + descarga del PDF)
-4. Índices IPC/ICL automáticos (traer valores oficiales y proponer el ajuste)
+4. ✅ Índices IPC/ICL automáticos — API pública del BCRA (`api.bcra.gob.ar`), sin API key
 5. Notificaciones por email (vencimientos 15 días antes, mora, ajustes) + job programado
 
 **Fase 2 (media)**: plantillas de contrato, portales propietario/inquilino (roles 5 y 6), reportes financieros, liquidaciones a propietarios.
 
-**Fase 3 (baja)**: mapa de propiedades, Veraz, compra/venta.
+**Fase 3 (baja)**: ✅ mapa de propiedades (adelantado) · Veraz, compra/venta pendientes.
 
 ## Ramas
 `master` = estable; el trabajo va en ramas por módulo (`feat/auth`, `feat/recibos`…) y se mergea a `master`. Hoy todo el código está en `arca-test`: hay que mergearla a `master`.

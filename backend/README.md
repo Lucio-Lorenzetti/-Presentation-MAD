@@ -10,7 +10,7 @@ Implementa:
   último comprobante autorizado y solicita el CAE.
 - **Lógica de negocio** (`src/services/facturacionService.js`): decide
   Factura A/B/C según la condición de IVA del emisor y el receptor, calcula
-  el IVA, guarda todo en SQLite y genera el PDF con el QR obligatorio de ARCA.
+  el IVA, guarda todo en Postgres y genera el PDF con el QR obligatorio de ARCA.
 - **API REST** (`src/routes/facturas.js`) para conectar esto con el resto
   del sistema (o probarlo con Postman/curl) sin escribir una sola línea de
   SOAP a mano.
@@ -37,9 +37,17 @@ npm install
 cp .env.example .env
 ```
 
-Requiere **Node.js 22.5 o superior** (usa el módulo `node:sqlite` incluido
-en Node, así evitamos una dependencia nativa que hay que compilar en cada
-máquina donde se instale — típico dolor de cabeza en Windows).
+Necesita una base **Postgres** (se usa [Supabase](https://supabase.com) como
+proveedor gestionado — plan gratuito). Pasos:
+
+1. Creá un proyecto en Supabase (gratis, sin tarjeta).
+2. Project → **Connect** → copiá el connection string en modo **Session
+   pooler** (el backend corre como proceso persistente, no serverless — no
+   hace falta el modo "Transaction pooler").
+3. Pegalo en `backend/.env` como `DATABASE_URL=...`.
+
+Las tablas se crean solas la primera vez que arranca el servidor o corrés
+`npm run seed` — no hay que correr ninguna migración a mano.
 
 ## Cómo obtener el certificado de ARCA (paso a paso)
 
@@ -181,17 +189,14 @@ Contratos y Propietarios/Inquilinos de la presentación (ver
 por API, se completaría automáticamente desde el contrato de alquiler.
 También conviene:
 
-- Migrar de SQLite a Postgres cuando haya más de un usuario concurrente
-  (la lógica de negocio no cambia, sólo `src/db.js`).
 - Agregar un cron/scheduler que dispare la emisión mensual de honorarios
   automáticamente (ítem de "Prioridad Alta" del relevamiento).
-- Sumar autenticación/roles a la API (hoy es de uso interno sin login),
-  reusando los 5 roles ya definidos en la presentación.
 
 ## Seguridad
 
-- `certs/*.pem`, `certs/*.key`, `.env` y la base SQLite están en
-  `.gitignore` — **nunca** los subas a un repositorio, ni siquiera privado.
-  Son las credenciales fiscales del cliente.
+- `certs/*.pem`, `certs/*.key` y `.env` (que incluye `DATABASE_URL`, la
+  contraseña de la base) están en `.gitignore` — **nunca** los subas a un
+  repositorio, ni siquiera privado. Son las credenciales fiscales y de base
+  de datos del cliente.
 - El certificado de producción y el de homologación son archivos distintos
   y no se deben mezclar.

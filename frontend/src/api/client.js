@@ -53,13 +53,27 @@ export const api = {
   delete: path => request(path, { method: 'DELETE' }),
 };
 
-// El PDF requiere el token, así que se baja con fetch y se abre como blob.
-export async function abrirPdf(id) {
-  const res = await fetch(`${BASE_URL}/api/facturas/${id}/pdf`, { headers: headers() });
-  if (!res.ok) throw new ApiError('No se pudo abrir el PDF.', res.status);
-  const url = URL.createObjectURL(await res.blob());
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+// Abre la pestaña YA (síncrono, todavía dentro del click) y recién después
+// espera el fetch del PDF — si se abre la pestaña recién cuando llega la
+// respuesta, el navegador ya no lo considera un gesto directo del usuario y
+// la bloquea como pop-up, sin avisar (por eso "no pasaba nada" al clickear).
+async function abrirPdfDesde(path, mensajeError) {
+  const ventana = window.open('', '_blank');
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, { headers: headers() });
+    if (!res.ok) throw new ApiError(mensajeError, res.status);
+    const url = URL.createObjectURL(await res.blob());
+    if (ventana) ventana.location.href = url;
+    else window.open(url, '_blank'); // el navegador no dejó abrir la pestaña vacía: probamos igual, por si acaso
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (e) {
+    ventana?.close();
+    throw e;
+  }
+}
+
+export function abrirPdf(id) {
+  return abrirPdfDesde(`/api/facturas/${id}/pdf`, 'No se pudo abrir el PDF.');
 }
 
 async function blobDeRecibo(pagoId) {
@@ -68,10 +82,8 @@ async function blobDeRecibo(pagoId) {
   return res.blob();
 }
 
-export async function abrirReciboPdf(pagoId) {
-  const url = URL.createObjectURL(await blobDeRecibo(pagoId));
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+export function abrirReciboPdf(pagoId) {
+  return abrirPdfDesde(`/api/contratos/cuotas/pagos/${pagoId}/recibo.pdf`, 'No se pudo obtener el recibo.');
 }
 
 // Descarga el PDF del recibo a disco (para adjuntarlo a mano en WhatsApp).
@@ -82,4 +94,41 @@ export async function descargarReciboPdf(pagoId, nombreArchivo) {
   a.download = nombreArchivo || `recibo-${pagoId}.pdf`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+// Ficha resumen del contrato (documento de gestión interna, no legal).
+export function abrirFichaContratoPdf(contratoId) {
+  return abrirPdfDesde(`/api/contratos/${contratoId}/ficha.pdf`, 'No se pudo generar la ficha del contrato.');
+}
+
+// Comprobante que el inquilino manda por WhatsApp al transferir (foto/captura/PDF), vinculado al pago.
+export function abrirComprobante(pagoId) {
+  return abrirPdfDesde(`/api/contratos/cuotas/pagos/${pagoId}/comprobante`, 'No se pudo abrir el comprobante.');
+}
+
+export async function subirComprobante(pagoId, archivo) {
+  const form = new FormData();
+  form.append('comprobante', archivo);
+  const t = getToken();
+  const res = await fetch(`${BASE_URL}/api/contratos/cuotas/pagos/${pagoId}/comprobante`, {
+    method: 'POST',
+    headers: t ? { Authorization: `Bearer ${t}` } : {}, // sin Content-Type: FormData arma el boundary del multipart solo
+    body: form,
+  });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const body = isJson ? await res.json() : null;
+  if (res.status === 401) sesionVencida();
+  if (!res.ok) throw new ApiError(body?.error || `Error ${res.status}`, res.status, body);
+  return body;
+}
+
+// Abre (ya, síncrono) una pestaña para WhatsApp y recién después la navega
+// al link armado — mismo motivo que abrirPdfDesde: si el `window.open` pasa
+// después de un `await`, el navegador lo bloquea como pop-up sin avisar.
+export function abrirVentanaWhatsApp() {
+  const ventana = window.open('', '_blank');
+  return {
+    navegar: link => { if (ventana) ventana.location.href = link; else window.open(link, '_blank'); },
+    cerrar: () => ventana?.close(),
+  };
 }

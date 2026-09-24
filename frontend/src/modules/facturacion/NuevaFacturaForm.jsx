@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { facturasApi } from '../../api/facturas';
 import { ApiError, abrirPdf } from '../../api/client';
+import InputDinero from '../../components/InputDinero';
 
 const DOC_TIPOS = [
   { value: 'CUIT', label: 'CUIT' },
@@ -124,10 +125,7 @@ export default function NuevaFacturaForm({ onEmitida, onCerrar }) {
             </div>
 
             <Campo label="Importe (sin IVA, si corresponde discriminarlo)">
-              <input
-                className="input" type="number" min="0" step="0.01" required
-                value={form.importeNeto} onChange={e => setCampo('importeNeto', e.target.value)}
-              />
+              <InputDinero decimales required value={form.importeNeto} onChange={v => setCampo('importeNeto', v)} />
             </Campo>
 
             <button

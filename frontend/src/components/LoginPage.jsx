@@ -23,12 +23,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-warm-50 flex items-center justify-center p-4">
-      <form onSubmit={submit} className="bg-white rounded-2xl shadow-xl border border-stone-100 w-full max-w-sm p-8 space-y-5">
+    <div className="min-h-screen bg-gradient-to-br from-warm-50 via-warm-100 to-brand-50 flex items-center justify-center p-4">
+      <form onSubmit={submit} className="bg-white rounded-2xl shadow-xl border border-stone-100 w-full max-w-sm p-8 pt-10 space-y-5 relative overflow-hidden">
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-brand-400 via-brand-500 to-brand-600"></div>
         <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-brand-500 flex items-center justify-center text-white text-lg font-extrabold mx-auto mb-3">M</div>
-          <h1 className="text-lg font-bold text-stone-800">MAD</h1>
-          <p className="text-xs text-stone-400">Gestión Inmobiliaria — iniciá sesión</p>
+          <h1 className="font-script text-8xl leading-none text-brand-600">MAD</h1>
+          <p className="text-[11px] font-semibold text-stone-500 tracking-[0.25em] uppercase mt-1">Servicios Inmobiliarios</p>
+          <p className="text-sm text-stone-400 italic mt-0.5">Alejandra Domínguez</p>
+          <div className="w-10 h-px bg-stone-200 mx-auto my-4"></div>
+          <p className="text-xs text-stone-400">Iniciá sesión para continuar</p>
         </div>
         <Campo label="Email">
           <input className="input" type="email" required autoFocus autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} />

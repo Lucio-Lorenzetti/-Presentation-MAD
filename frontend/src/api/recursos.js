@@ -32,6 +32,7 @@ export const contratosApi = {
   resumen: () => api.get('/api/contratos/resumen'),
   crear: data => api.post('/api/contratos', data),
   ajustar: (id, porcentaje) => api.post(`/api/contratos/${id}/ajustes`, { porcentaje }),
+  sugerenciaAjuste: id => api.get(`/api/contratos/${id}/sugerencia-ajuste`),
   cerrar: (id, estado) => api.post(`/api/contratos/${id}/cierre`, { estado }),
   pagarCuota: (cuotaId, data) => api.post(`/api/contratos/cuotas/${cuotaId}/pagos`, data),
 };

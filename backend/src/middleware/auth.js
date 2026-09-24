@@ -17,10 +17,10 @@ function rolesPermitidos(req) {
   return ESCRITURA;
 }
 
-function autenticar(req, res, next) {
+async function autenticar(req, res, next) {
   const header = req.headers.authorization || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  const usuario = token && usuarioDesdeToken(token);
+  const usuario = token && await usuarioDesdeToken(token);
   if (!usuario) return res.status(401).json({ error: 'Sesión no válida o vencida. Iniciá sesión de nuevo.' });
   req.usuario = usuario;
   next();

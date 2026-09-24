@@ -10,6 +10,11 @@ function bool(v, def = false) {
 const config = {
   port: Number(process.env.PORT || 3001),
 
+  database: {
+    url: process.env.DATABASE_URL || '',
+    ssl: bool(process.env.DATABASE_SSL, true),
+  },
+
   arca: {
     production: bool(process.env.ARCA_PRODUCTION, false),
     cuit: process.env.ARCA_CUIT || '',

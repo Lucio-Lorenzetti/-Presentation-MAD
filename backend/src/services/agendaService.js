@@ -3,13 +3,13 @@
 const db = require('../db');
 const { hoyISO, sumarDias, calcularMora, round2 } = require('../utils/fechas');
 
-function proximosVencimientos({ diasAtras = 60, diasAdelante = 90 } = {}) {
+async function proximosVencimientos({ diasAtras = 60, diasAdelante = 90 } = {}) {
   const hoy = hoyISO();
   const desde = sumarDias(hoy, -diasAtras);
   const hasta = sumarDias(hoy, diasAdelante);
   const items = [];
 
-  const cuotas = db.prepare(`
+  const cuotas = await db.prepare(`
     SELECT q.periodo, q.vencimiento, q.monto, c.id AS contrato_id,
       i.nombre AS inquilino_nombre, i.telefono AS inquilino_telefono,
       p.direccion AS propiedad_direccion
@@ -36,7 +36,7 @@ function proximosVencimientos({ diasAtras = 60, diasAdelante = 90 } = {}) {
     });
   }
 
-  const ajustes = db.prepare(`
+  const ajustes = await db.prepare(`
     SELECT c.id AS contrato_id, c.indice, c.proxima_actualizacion, c.monto_actual,
       i.nombre AS inquilino_nombre, i.telefono AS inquilino_telefono,
       p.direccion AS propiedad_direccion
@@ -60,7 +60,7 @@ function proximosVencimientos({ diasAtras = 60, diasAdelante = 90 } = {}) {
     });
   }
 
-  const fines = db.prepare(`
+  const fines = await db.prepare(`
     SELECT c.id AS contrato_id, c.fecha_fin,
       i.nombre AS inquilino_nombre, i.telefono AS inquilino_telefono,
       pe.nombre AS propietario_nombre, pe.telefono AS propietario_telefono,

@@ -4,6 +4,6 @@ const { manejar } = require('../utils/validar');
 
 const router = express.Router();
 
-router.get('/', manejar((req, res) => res.json(agenda.proximosVencimientos())));
+router.get('/', manejar(async (req, res) => res.json(await agenda.proximosVencimientos())));
 
 module.exports = router;

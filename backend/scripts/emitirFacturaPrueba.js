@@ -3,6 +3,7 @@
  * CUIT de prueba que ARCA documenta en sus manuales (20111111112).
  * Uso: npm run emitir-factura-prueba
  */
+const db = require('../src/db');
 const { emitirFacturaHonorarios } = require('../src/services/facturacionService');
 const { config } = require('../src/config');
 
@@ -11,6 +12,8 @@ const { config } = require('../src/config');
     console.error('⚠️  Este script es sólo para homologación. Poné ARCA_PRODUCTION=false antes de correrlo.');
     process.exit(1);
   }
+
+  await db.inicializar();
 
   const factura = await emitirFacturaHonorarios({
     receptor: {

@@ -222,6 +222,129 @@ async function generarReciboPdf(recibo) {
   return filePath;
 }
 
+const TIPO_PROP_LABEL = { CASA: 'Casa', DEPTO: 'Depto', LOCAL: 'Local', PH: 'PH' };
+const ESTADO_CONTRATO_LABEL = { ACTIVO: 'Activo', FINALIZADO: 'Finalizado', RESCINDIDO: 'Rescindido' };
+
+/**
+ * Genera la ficha resumen de un contrato (documento de gestión interna).
+ * No es el contrato legal: no lleva cláusulas, solo los datos ya cargados
+ * en el sistema (propiedad, partes, garantes, montos, historial de ajustes).
+ * Se genera al vuelo y se envía directo a la respuesta HTTP, sin guardarse
+ * en disco (a diferencia de facturas/recibos, siempre refleja el estado actual).
+ */
+function generarFichaContratoPdf(ficha, res) {
+  const { contrato: c, propiedad: p, inquilino: i, garantes, ajustes } = ficha;
+  const doc = new PDFDocument({ size: 'A4', margin: 40 });
+  doc.pipe(res);
+
+  // Encabezado
+  doc.rect(40, 40, 515, 90).stroke();
+  doc.fontSize(16).text(config.emisor.razonSocial, 50, 50);
+  doc.fontSize(9).text(config.emisor.domicilio, 50, 70);
+  doc.fontSize(9).text(`CUIT: ${config.arca.cuit}`, 50, 84);
+
+  doc.rect(400, 40, 155, 30).stroke();
+  doc.fontSize(11).text('FICHA DE CONTRATO', 408, 48, { width: 140 });
+  doc.fontSize(9).text(`Contrato N° ${c.id} · ${ESTADO_CONTRATO_LABEL[c.estado] || c.estado}`, 400, 90, { width: 155, align: 'right' });
+
+  let y = 150;
+
+  y = seccionPdf(doc, y, 'Propiedad');
+  doc.fontSize(9).fillColor('black');
+  doc.text(`${p.direccion}${p.barrio ? ' — ' + p.barrio : ''}`, 40, y); y += 14;
+  const detallesProp = [
+    p.ambientes && `${p.ambientes} amb.`,
+    p.dormitorios && `${p.dormitorios} dorm.`,
+    p.banos && `${p.banos} baño(s)`,
+    p.superficie_m2 && `${p.superficie_m2} m²`,
+  ].filter(Boolean).join(', ');
+  doc.text(`Tipo: ${TIPO_PROP_LABEL[p.tipo] || p.tipo}${detallesProp ? ' — ' + detallesProp : ''}`, 40, y); y += 14;
+  if (p.servicios) { doc.text(`Servicios: ${p.servicios}`, 40, y, { width: 515 }); y += 14; }
+  if (p.propietario_nombre) {
+    const contactoProp = [p.propietario_telefono && `Tel: ${p.propietario_telefono}`, p.propietario_email].filter(Boolean).join(' · ');
+    doc.text(`Propietario: ${p.propietario_nombre}${contactoProp ? ' · ' + contactoProp : ''}`, 40, y, { width: 515 });
+    y += 14;
+  }
+  y += 8;
+
+  y = seccionPdf(doc, y, 'Inquilino');
+  doc.fontSize(9).fillColor('black');
+  doc.text(i.nombre, 40, y); y += 14;
+  const docInquilino = i.cuit ? `CUIT: ${i.cuit}` : (i.dni ? `DNI: ${i.dni}` : null);
+  const contactoInq = [docInquilino, i.telefono && `Tel: ${i.telefono}`, i.email].filter(Boolean).join(' · ');
+  if (contactoInq) { doc.text(contactoInq, 40, y, { width: 515 }); y += 14; }
+  if (i.domicilio) { doc.text(`Domicilio: ${i.domicilio}`, 40, y, { width: 515 }); y += 14; }
+  y += 8;
+
+  if (garantes.length > 0) {
+    y = seccionPdf(doc, y, 'Garantes');
+    doc.fontSize(9).fillColor('black');
+    for (const g of garantes) {
+      y = saltoDePaginaPdf(doc, y);
+      const linea = [g.nombre, g.dni && `DNI ${g.dni}`, g.telefono, g.tipo_garantia].filter(Boolean).join(' · ');
+      doc.text(`• ${linea}`, 40, y, { width: 515 });
+      y += 14;
+    }
+    y += 8;
+  }
+
+  y = seccionPdf(doc, y, 'Condiciones económicas');
+  doc.fontSize(9).fillColor('black');
+  doc.text(`Vigencia: ${formatFechaISO(c.fecha_inicio)} a ${formatFechaISO(c.fecha_fin)}`, 40, y); y += 14;
+  doc.text(`Alquiler inicial: $ ${c.monto_inicial.toFixed(2)}   →   Alquiler actual: $ ${c.monto_actual.toFixed(2)}`, 40, y); y += 14;
+  doc.text(`Índice de ajuste: ${c.indice === 'NINGUNO' ? 'Sin índice' : `${c.indice}, cada ${c.periodicidad_meses} mes(es)`}`, 40, y); y += 14;
+  if (c.proxima_actualizacion) { doc.text(`Próxima actualización: ${formatFechaISO(c.proxima_actualizacion)}`, 40, y); y += 14; }
+  doc.text(`Día de vencimiento mensual: ${c.dia_vencimiento}`, 40, y); y += 14;
+  y += 8;
+
+  if (ajustes.length > 0) {
+    y = seccionPdf(doc, y, 'Historial de ajustes');
+    doc.fontSize(9).fillColor('black');
+    doc.text('Fecha', 40, y);
+    doc.text('Índice', 130, y);
+    doc.text('%', 190, y);
+    doc.text('Monto anterior → nuevo', 240, y);
+    y += 14;
+    doc.moveTo(40, y).lineTo(555, y).stroke();
+    y += 8;
+    for (const a of ajustes) {
+      y = saltoDePaginaPdf(doc, y);
+      doc.text(formatFechaISO(a.fecha), 40, y);
+      doc.text(a.indice, 130, y);
+      doc.text(`${a.porcentaje > 0 ? '+' : ''}${a.porcentaje}%`, 190, y);
+      doc.text(`$ ${a.monto_anterior.toFixed(2)} → $ ${a.monto_nuevo.toFixed(2)}`, 240, y);
+      y += 16;
+    }
+  }
+
+  const hoy = new Date();
+  const hoyStr = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
+  doc.fontSize(8).fillColor('#78716C').text(
+    `Ficha de gestión interna, generada el ${hoyStr}. No reemplaza al contrato legal firmado por las partes.`,
+    40, 780, { width: 515, align: 'center' }
+  );
+  doc.fillColor('black');
+
+  doc.end();
+}
+
+function seccionPdf(doc, y, titulo) {
+  y = saltoDePaginaPdf(doc, y, 30);
+  doc.fontSize(11).fillColor('#EA580C').text(titulo, 40, y);
+  y += 16;
+  doc.moveTo(40, y - 4).lineTo(555, y - 4).strokeColor('#E7E5E4').stroke();
+  doc.strokeColor('black').fillColor('black');
+  return y;
+}
+
+function saltoDePaginaPdf(doc, y, margenExtra = 0) {
+  if (y > 760 - margenExtra) {
+    doc.addPage();
+    return 50;
+  }
+  return y;
+}
+
 function formatFechaISO(isoDate) {
   if (!isoDate) return '-';
   const [y, m, d] = isoDate.split('-');
@@ -240,4 +363,4 @@ function docTipoLabel(docTipo) {
   return 'Doc.';
 }
 
-module.exports = { generarFacturaPdf, generarReciboPdf };
+module.exports = { generarFacturaPdf, generarReciboPdf, generarFichaContratoPdf };

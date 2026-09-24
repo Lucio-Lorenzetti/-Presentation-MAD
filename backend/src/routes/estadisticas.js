@@ -4,6 +4,6 @@ const { manejar } = require('../utils/validar');
 
 const router = express.Router();
 
-router.get('/', manejar((req, res) => res.json(estadisticas.panel())));
+router.get('/', manejar(async (req, res) => res.json(await estadisticas.panel())));
 
 module.exports = router;

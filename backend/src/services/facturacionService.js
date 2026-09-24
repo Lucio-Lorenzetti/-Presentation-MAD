@@ -117,22 +117,10 @@ async function emitirFacturaHonorarios(input) {
     observaciones: JSON.stringify([...resultadoCae.observaciones, ...resultadoCae.errores]),
   };
 
-  const insert = db.prepare(`
-    INSERT INTO facturas (
-      ambiente, cbte_tipo, pto_vta, numero, fecha, concepto,
-      receptor_doc_tipo, receptor_doc_nro, receptor_razon_social, receptor_condicion_iva,
-      descripcion, periodo_desde, periodo_hasta, fch_vto_pago,
-      importe_neto, importe_iva, importe_total,
-      resultado, cae, cae_vencimiento, observaciones
-    ) VALUES (
-      $ambiente, $cbte_tipo, $pto_vta, $numero, $fecha, $concepto,
-      $receptor_doc_tipo, $receptor_doc_nro, $receptor_razon_social, $receptor_condicion_iva,
-      $descripcion, $periodo_desde, $periodo_hasta, $fch_vto_pago,
-      $importe_neto, $importe_iva, $importe_total,
-      $resultado, $cae, $cae_vencimiento, $observaciones
-    )
-  `);
-  const info = insert.run(prefixKeys(registro));
+  const columnas = Object.keys(registro);
+  const info = await db.prepare(`
+    INSERT INTO facturas (${columnas.join(', ')}) VALUES (${columnas.map(() => '?').join(', ')})
+  `).run(...columnas.map(c => registro[c] ?? null));
   const id = info.lastInsertRowid;
 
   let pdfPath = null;
@@ -155,7 +143,7 @@ async function emitirFacturaHonorarios(input) {
       cae: resultadoCae.cae,
       caeVencimiento: resultadoCae.caeVencimiento,
     });
-    db.prepare('UPDATE facturas SET pdf_path = ? WHERE id = ?').run(pdfPath, id);
+    await db.prepare('UPDATE facturas SET pdf_path = ? WHERE id = ?').run(pdfPath, id);
   }
 
   return { id, ...registro, pdf_path: pdfPath };
@@ -165,18 +153,11 @@ function round2(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
-// node:sqlite espera los parámetros nombrados con el prefijo '$' como key.
-function prefixKeys(obj) {
-  const out = {};
-  for (const [k, v] of Object.entries(obj)) out['$' + k] = v ?? null;
-  return out;
-}
-
-function listarFacturas({ limit = 50, offset = 0 } = {}) {
+async function listarFacturas({ limit = 50, offset = 0 } = {}) {
   return db.prepare('SELECT * FROM facturas ORDER BY id DESC LIMIT ? OFFSET ?').all(limit, offset);
 }
 
-function obtenerFactura(id) {
+async function obtenerFactura(id) {
   return db.prepare('SELECT * FROM facturas WHERE id = ?').get(id);
 }
 

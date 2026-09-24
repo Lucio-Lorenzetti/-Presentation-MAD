@@ -12,6 +12,7 @@ const links = [
   { to: '/alquileres', label: 'Alquileres', icon: 'fa-file-contract' },
   { to: '/facturacion', label: 'Facturación', icon: 'fa-file-invoice', permiso: 'facturar' },
   { to: '/propiedades', label: 'Propiedades', icon: 'fa-building' },
+  { to: '/mapa', label: 'Mapa', icon: 'fa-map-location-dot' },
   { to: '/personas', label: 'Propietarios / Inquilinos', icon: 'fa-users' },
   { to: '/usuarios', label: 'Usuarios', icon: 'fa-user-shield', permiso: 'usuarios' },
 ];

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { config } = require('./config');
+const db = require('./db');
 const facturasRouter = require('./routes/facturas');
 
 const app = express();
@@ -31,9 +32,17 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno' });
 });
 
-require('./services/authService').asegurarAdminInicial();
+async function main() {
+  await db.inicializar();
+  await require('./services/authService').asegurarAdminInicial();
 
-app.listen(config.port, () => {
-  console.log(`Facturación ARCA escuchando en http://localhost:${config.port}`);
-  console.log(`Ambiente ARCA: ${config.arca.production ? 'PRODUCCIÓN' : 'homologación (testing)'}`);
+  app.listen(config.port, () => {
+    console.log(`Facturación ARCA escuchando en http://localhost:${config.port}`);
+    console.log(`Ambiente ARCA: ${config.arca.production ? 'PRODUCCIÓN' : 'homologación (testing)'}`);
+  });
+}
+
+main().catch(err => {
+  console.error('No se pudo arrancar el servidor:', err.message);
+  process.exit(1);
 });

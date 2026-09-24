@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../../components/Modal';
 import Campo from '../../components/Campo';
 import Boton from '../../components/Boton';
+import InputDinero from '../../components/InputDinero';
 import { contratosApi, personasApi, propiedadesApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 import { hoyISO } from '../../format';
@@ -74,7 +75,7 @@ export default function NuevoContratoForm({ onCerrar, onCreado }) {
         <div className="grid grid-cols-2 gap-3">
           <Campo label="Inicio"><input className="input" type="date" required value={form.fechaInicio} onChange={e => set('fechaInicio', e.target.value)} /></Campo>
           <Campo label="Fin"><input className="input" type="date" required value={form.fechaFin} onChange={e => set('fechaFin', e.target.value)} /></Campo>
-          <Campo label="Alquiler inicial ($)"><input className="input" type="number" min="1" required value={form.montoInicial} onChange={e => set('montoInicial', e.target.value)} /></Campo>
+          <Campo label="Alquiler inicial"><InputDinero required value={form.montoInicial} onChange={v => set('montoInicial', v)} /></Campo>
           <Campo label="Día de vencimiento (1-28)"><input className="input" type="number" min="1" max="28" required value={form.diaVencimiento} onChange={e => set('diaVencimiento', e.target.value)} /></Campo>
           <Campo label="Índice de actualización">
             <select className="input" value={form.indice} onChange={e => set('indice', e.target.value)}>

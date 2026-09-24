@@ -13,9 +13,9 @@ function ultimosMeses(n) {
   return periodos;
 }
 
-function cobrosPorMes(n = 12) {
+async function cobrosPorMes(n = 12) {
   const periodos = ultimosMeses(n);
-  const filas = db.prepare(`
+  const filas = await db.prepare(`
     SELECT substr(fecha, 1, 7) AS periodo, COALESCE(SUM(total), 0) AS total
     FROM pagos WHERE substr(fecha, 1, 7) >= ? GROUP BY periodo
   `).all(periodos[0]);
@@ -23,10 +23,10 @@ function cobrosPorMes(n = 12) {
   return periodos.map(p => ({ periodo: p, total: round2(porPeriodo[p] || 0) }));
 }
 
-function facturadoPorMes(n = 12) {
+async function facturadoPorMes(n = 12) {
   const periodos = ultimosMeses(n);
   // facturas.fecha está en formato YYYYMMDD (sin guiones).
-  const filas = db.prepare(`
+  const filas = await db.prepare(`
     SELECT substr(fecha, 1, 4) || '-' || substr(fecha, 5, 2) AS periodo, COALESCE(SUM(importe_total), 0) AS total
     FROM facturas WHERE resultado = 'A' AND (substr(fecha, 1, 4) || '-' || substr(fecha, 5, 2)) >= ?
     GROUP BY periodo
@@ -35,9 +35,9 @@ function facturadoPorMes(n = 12) {
   return periodos.map(p => ({ periodo: p, total: round2(porPeriodo[p] || 0) }));
 }
 
-function topDeudores(limite = 5) {
+async function topDeudores(limite = 5) {
   const hoy = hoyISO();
-  const vencidas = db.prepare(`
+  const vencidas = await db.prepare(`
     SELECT q.monto, q.vencimiento, i.id AS inquilino_id, i.nombre AS inquilino_nombre, p.direccion AS propiedad_direccion
     FROM cuotas q
     JOIN contratos c ON c.id = q.contrato_id
@@ -60,12 +60,14 @@ function topDeudores(limite = 5) {
   return [...porInquilino.values()].sort((a, b) => b.deuda - a.deuda).slice(0, limite);
 }
 
-function resumenGeneral() {
-  const contratos = contratosService.resumen();
-  const propiedades = propiedadesService.resumen();
-  const facturas = db.prepare(`
-    SELECT COUNT(*) AS total, SUM(resultado = 'A') AS aprobadas, SUM(resultado = 'R') AS rechazadas,
-      COALESCE(SUM(CASE WHEN resultado = 'A' THEN importe_total ELSE 0 END), 0) AS totalFacturado
+async function resumenGeneral() {
+  const contratos = await contratosService.resumen();
+  const propiedades = await propiedadesService.resumen();
+  const facturas = await db.prepare(`
+    SELECT COUNT(*) AS total,
+      SUM(CASE WHEN resultado = 'A' THEN 1 ELSE 0 END) AS aprobadas,
+      SUM(CASE WHEN resultado = 'R' THEN 1 ELSE 0 END) AS rechazadas,
+      COALESCE(SUM(CASE WHEN resultado = 'A' THEN importe_total ELSE 0 END), 0) AS total_facturado
     FROM facturas
   `).get();
   return {
@@ -75,18 +77,16 @@ function resumenGeneral() {
       total: facturas.total,
       aprobadas: facturas.aprobadas || 0,
       rechazadas: facturas.rechazadas || 0,
-      totalFacturado: round2(facturas.totalFacturado),
+      totalFacturado: round2(facturas.total_facturado),
     },
   };
 }
 
-function panel() {
-  return {
-    resumen: resumenGeneral(),
-    cobrosPorMes: cobrosPorMes(12),
-    facturadoPorMes: facturadoPorMes(12),
-    topDeudores: topDeudores(5),
-  };
+async function panel() {
+  const [resumen, cobros, facturado, deudores] = await Promise.all([
+    resumenGeneral(), cobrosPorMes(12), facturadoPorMes(12), topDeudores(5),
+  ]);
+  return { resumen, cobrosPorMes: cobros, facturadoPorMes: facturado, topDeudores: deudores };
 }
 
 module.exports = { panel, cobrosPorMes, facturadoPorMes, topDeudores, resumenGeneral };

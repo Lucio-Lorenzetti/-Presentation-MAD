@@ -21,6 +21,7 @@
   --color-warm-400: #C4B8A8;
 
   --font-sans: 'Inter', system-ui, sans-serif;
+  --font-script: 'Tangerine', cursive;
 }
 
 /* Letra más grande en toda la app (accesibilidad): todos los tamaños de

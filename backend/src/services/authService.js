@@ -59,12 +59,12 @@ function registrarFallo(clave) {
 }
 
 // ── Login / sesión ───────────────────────────────────────────────────────────
-function login(email, password, ip = '') {
+async function login(email, password, ip = '') {
   requerir({ email, password }, ['email', 'password']);
   const clave = `${String(email).toLowerCase()}|${ip}`;
   chequearBloqueo(clave);
 
-  const u = db.prepare('SELECT * FROM usuarios WHERE email = ?').get(String(email).trim());
+  const u = await db.prepare('SELECT * FROM usuarios WHERE LOWER(email) = LOWER(?)').get(String(email).trim());
   // Se verifica igual aunque no exista, para no revelar qué emails están registrados por tiempo de respuesta.
   const ok = u ? verificarPassword(password, u.password_hash) : (verificarPassword(password, hashPassword('x')), false);
   if (!ok || !u.activo) {
@@ -77,10 +77,10 @@ function login(email, password, ip = '') {
 }
 
 // Devuelve el usuario vigente (activo, con su rol actual) o null.
-function usuarioDesdeToken(token) {
+async function usuarioDesdeToken(token) {
   try {
     const { sub } = jwt.verify(token, SECRETO);
-    const u = db.prepare('SELECT * FROM usuarios WHERE id = ? AND activo = 1').get(sub);
+    const u = await db.prepare('SELECT * FROM usuarios WHERE id = ? AND activo = 1').get(sub);
     return u ? publico(u) : null;
   } catch {
     return null;
@@ -88,26 +88,26 @@ function usuarioDesdeToken(token) {
 }
 
 // ── ABM de usuarios ──────────────────────────────────────────────────────────
-function listarUsuarios() {
-  return db.prepare('SELECT * FROM usuarios ORDER BY nombre COLLATE NOCASE').all().map(publico);
+async function listarUsuarios() {
+  return (await db.prepare('SELECT * FROM usuarios ORDER BY LOWER(nombre)').all()).map(publico);
 }
 
-function crearUsuario(d) {
+async function crearUsuario(d) {
   requerir(d, ['nombre', 'email', 'password', 'rol']);
   enumerado(d.rol, ROLES, 'rol');
   validarPassword(d.password);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new ErrorValidacion('El email no es válido.');
-  if (db.prepare('SELECT 1 FROM usuarios WHERE email = ?').get(d.email.trim())) {
+  if (await db.prepare('SELECT 1 FROM usuarios WHERE LOWER(email) = LOWER(?)').get(d.email.trim())) {
     throw new ErrorValidacion('Ya existe un usuario con ese email.', 409);
   }
-  const info = db.prepare('INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)')
+  const info = await db.prepare('INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)')
     .run(d.nombre.trim(), d.email.trim(), hashPassword(d.password), d.rol);
-  return publico(db.prepare('SELECT * FROM usuarios WHERE id = ?').get(info.lastInsertRowid));
+  return publico(await db.prepare('SELECT * FROM usuarios WHERE id = ?').get(info.lastInsertRowid));
 }
 
 // `actor` = usuario que hace el cambio. Un Administrador no puede tocar a un Desarrollador ni crear otro.
-function actualizarUsuario(id, d, actor) {
-  const u = db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id);
+async function actualizarUsuario(id, d, actor) {
+  const u = await db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id);
   if (!u) return null;
   if (actor.rol !== 'DESARROLLADOR' && (u.rol === 'DESARROLLADOR' || d.rol === 'DESARROLLADOR')) {
     throw new ErrorValidacion('Sólo un Desarrollador puede gestionar usuarios con ese rol.', 403);
@@ -119,29 +119,29 @@ function actualizarUsuario(id, d, actor) {
   }
   // Siempre debe quedar al menos un usuario activo con acceso total.
   if ((u.rol === 'ADMINISTRADOR' || u.rol === 'DESARROLLADOR') && u.activo && (!activo || !['ADMINISTRADOR', 'DESARROLLADOR'].includes(rol))) {
-    const otros = db.prepare("SELECT COUNT(*) AS n FROM usuarios WHERE id != ? AND activo = 1 AND rol IN ('ADMINISTRADOR','DESARROLLADOR')").get(id).n;
+    const otros = (await db.prepare("SELECT COUNT(*) AS n FROM usuarios WHERE id != ? AND activo = 1 AND rol IN ('ADMINISTRADOR','DESARROLLADOR')").get(id)).n;
     if (otros === 0) throw new ErrorValidacion('Tiene que quedar al menos un administrador activo.', 409);
   }
   let hash = u.password_hash;
   if (d.password) { validarPassword(d.password); hash = hashPassword(d.password); }
-  db.prepare('UPDATE usuarios SET nombre = ?, rol = ?, activo = ?, password_hash = ? WHERE id = ?')
+  await db.prepare('UPDATE usuarios SET nombre = ?, rol = ?, activo = ?, password_hash = ? WHERE id = ?')
     .run((d.nombre ?? u.nombre).trim(), rol, activo, hash, id);
-  return publico(db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id));
+  return publico(await db.prepare('SELECT * FROM usuarios WHERE id = ?').get(id));
 }
 
-function cambiarPassword(usuarioId, actual, nueva) {
-  const u = db.prepare('SELECT * FROM usuarios WHERE id = ?').get(usuarioId);
+async function cambiarPassword(usuarioId, actual, nueva) {
+  const u = await db.prepare('SELECT * FROM usuarios WHERE id = ?').get(usuarioId);
   if (!u || !verificarPassword(String(actual || ''), u.password_hash)) throw new ErrorValidacion('La contraseña actual no es correcta.', 400);
   validarPassword(nueva);
-  db.prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?').run(hashPassword(nueva), usuarioId);
+  await db.prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?').run(hashPassword(nueva), usuarioId);
 }
 
 // Primer arranque: si no hay usuarios, crea un administrador inicial.
-function asegurarAdminInicial() {
-  if (db.prepare('SELECT COUNT(*) AS n FROM usuarios').get().n > 0) return;
+async function asegurarAdminInicial() {
+  if ((await db.prepare('SELECT COUNT(*) AS n FROM usuarios').get()).n > 0) return;
   const email = process.env.ADMIN_EMAIL || 'admin@mad.local';
   const password = process.env.ADMIN_PASSWORD || 'admin1234';
-  crearUsuario({ nombre: 'Administrador', email, password, rol: 'ADMINISTRADOR' });
+  await crearUsuario({ nombre: 'Administrador', email, password, rol: 'ADMINISTRADOR' });
   console.log(`[auth] Usuario inicial creado: ${email} / ${process.env.ADMIN_PASSWORD ? '(contraseña de ADMIN_PASSWORD)' : password}`);
   if (!process.env.ADMIN_PASSWORD) console.log('[auth] CAMBIÁ esa contraseña antes de poner el sistema online.');
 }

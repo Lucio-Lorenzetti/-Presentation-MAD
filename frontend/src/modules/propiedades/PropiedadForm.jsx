@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Modal from '../../components/Modal';
 import Campo from '../../components/Campo';
 import Boton from '../../components/Boton';
+import InputDinero from '../../components/InputDinero';
 import { propiedadesApi, personasApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 
@@ -99,8 +100,12 @@ export default function PropiedadForm({ propiedad, onCerrar, onGuardada }) {
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          {n('alquilerSugerido', 'Alquiler sugerido ($)')}
-          {n('expensas', 'Expensas ($)')}
+          <Campo label="Alquiler sugerido">
+            <InputDinero value={form.alquilerSugerido} onChange={v => set('alquilerSugerido', v)} />
+          </Campo>
+          <Campo label="Expensas">
+            <InputDinero value={form.expensas} onChange={v => set('expensas', v)} />
+          </Campo>
           <Campo label="Partida inmobiliaria">
             <input className="input" value={form.partida} onChange={e => set('partida', e.target.value)} />
           </Campo>
