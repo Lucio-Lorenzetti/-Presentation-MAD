@@ -111,6 +111,19 @@ async function actualizar(id, d) {
   return obtener(id);
 }
 
+// Corrección manual de la ubicación (arrastrando el pin en el mapa) cuando la
+// geocodificación automática quedó aproximada o directamente mal ubicada.
+async function actualizarUbicacion(id, lat, lng) {
+  lat = Number(lat);
+  lng = Number(lng);
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new ErrorValidacion('lat inválida.');
+  if (!Number.isFinite(lng) || lng < -180 || lng > 180) throw new ErrorValidacion('lng inválida.');
+  const a = await db.prepare('SELECT id FROM propiedades WHERE id = ? AND deleted_at IS NULL').get(id);
+  if (!a) return null;
+  await db.prepare("UPDATE propiedades SET lat = ?, lng = ?, geocoding_estado = 'OK' WHERE id = ?").run(lat, lng, id);
+  return obtener(id);
+}
+
 async function eliminar(id) {
   const enUso = await db.prepare("SELECT 1 FROM contratos WHERE propiedad_id = ? AND estado = 'ACTIVO' AND deleted_at IS NULL").get(id);
   if (enUso) throw new ErrorValidacion('No se puede eliminar: la propiedad tiene un contrato activo.', 409);
@@ -128,4 +141,4 @@ async function resumen() {
   return { total: r.total, disponibles: r.disponibles || 0, alquiladas: r.alquiladas || 0, enReparacion: r.en_reparacion || 0 };
 }
 
-module.exports = { listar, obtener, crear, actualizar, eliminar, resumen };
+module.exports = { listar, obtener, crear, actualizar, actualizarUbicacion, eliminar, resumen };

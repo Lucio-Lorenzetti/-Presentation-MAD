@@ -30,6 +30,13 @@ router.put('/:id', manejar(async (req, res) => {
   res.json(p);
 }));
 
+// Ajuste manual de la ubicación en el mapa (arrastrar el pin): { lat, lng }
+router.put('/:id/ubicacion', manejar(async (req, res) => {
+  const p = await propiedades.actualizarUbicacion(req.params.id, req.body.lat, req.body.lng);
+  if (!p) return res.status(404).json({ error: 'Propiedad no encontrada' });
+  res.json(p);
+}));
+
 router.delete('/:id', manejar(async (req, res) => {
   if (!(await propiedades.eliminar(req.params.id))) return res.status(404).json({ error: 'Propiedad no encontrada' });
   res.status(204).end();

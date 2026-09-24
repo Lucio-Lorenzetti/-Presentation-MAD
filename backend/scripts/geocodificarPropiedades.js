@@ -5,24 +5,31 @@ const db = require('../src/db');
 const { geocodificar } = require('../src/services/geocodingService');
 
 const esperar = ms => new Promise(r => setTimeout(r, ms));
+const forzarTodas = process.argv.includes('--todas');
 
 (async () => {
-  const pendientes = db.prepare(
-    "SELECT id, direccion, barrio FROM propiedades WHERE deleted_at IS NULL AND (lat IS NULL OR geocoding_estado != 'OK')"
+  await db.inicializar();
+
+  const pendientes = await db.prepare(
+    forzarTodas
+      ? 'SELECT id, direccion, barrio FROM propiedades WHERE deleted_at IS NULL'
+      : "SELECT id, direccion, barrio FROM propiedades WHERE deleted_at IS NULL AND (lat IS NULL OR geocoding_estado NOT IN ('OK', 'APROXIMADO'))"
   ).all();
 
   if (pendientes.length === 0) {
     console.log('No hay propiedades pendientes de geocodificar.');
-    return;
+    process.exit(0);
   }
 
   console.log(`Geocodificando ${pendientes.length} propiedad(es)...`);
   for (const p of pendientes) {
     const geo = await geocodificar(p.direccion, p.barrio);
-    db.prepare('UPDATE propiedades SET lat = ?, lng = ?, geocoding_estado = ? WHERE id = ?')
+    await db.prepare('UPDATE propiedades SET lat = ?, lng = ?, geocoding_estado = ? WHERE id = ?')
       .run(geo.lat, geo.lng, geo.geocodingEstado, p.id);
-    console.log(`  ${geo.geocodingEstado === 'OK' ? '✅' : '⚠️ '} ${p.direccion} → ${geo.geocodingEstado}${geo.lat ? ` (${geo.lat}, ${geo.lng})` : ''}`);
+    const icono = geo.geocodingEstado === 'OK' ? '✅' : geo.geocodingEstado === 'APROXIMADO' ? '〰️' : '⚠️ ';
+    console.log(`  ${icono} ${p.direccion} → ${geo.geocodingEstado}${geo.lat ? ` (${geo.lat}, ${geo.lng})` : ''}`);
     await esperar(1100); // Nominatim: máx. ~1 req/seg
   }
   console.log('Listo.');
+  process.exit(0);
 })();

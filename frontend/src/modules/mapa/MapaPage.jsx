@@ -15,11 +15,12 @@ const COLOR_ESTADO = { DISPONIBLE: '#10B981', ALQUILADA: '#F97316', EN_REPARACIO
 
 const BAHIA_BLANCA = [-38.7183, -62.2660];
 
-function iconoCasa(estado) {
+function iconoCasa(estado, aproximado) {
   const color = COLOR_ESTADO[estado] || '#78716C';
+  const borde = aproximado ? '2px dashed white' : '2px solid white';
   return L.divIcon({
     className: '',
-    html: `<div style="background:${color};width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;">
+    html: `<div style="background:${color};width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:${borde};box-shadow:0 1px 4px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;">
              <i class="fa-solid fa-house" style="color:#fff;font-size:10px;transform:rotate(45deg);"></i>
            </div>`,
     iconSize: [26, 26],
@@ -56,9 +57,21 @@ export default function MapaPage() {
   function dibujarMarcadores(mapa, lista) {
     marcadoresRef.current.forEach(m => m.remove());
     marcadoresRef.current = lista.map(p => {
-      const marcador = L.marker([p.lat, p.lng], { icon: iconoCasa(p.estado) }).addTo(mapa);
-      marcador.bindTooltip(`${p.direccion}${p.barrio ? ' — ' + p.barrio : ''}`, { direction: 'top' });
+      const aproximado = p.geocoding_estado === 'APROXIMADO';
+      const marcador = L.marker([p.lat, p.lng], { icon: iconoCasa(p.estado, aproximado), draggable: true }).addTo(mapa);
+      const textoTooltip = `${p.direccion}${p.barrio ? ' — ' + p.barrio : ''}` + (aproximado ? ' (ubicación aproximada — arrastrá el pin para ajustarla)' : '');
+      marcador.bindTooltip(textoTooltip, { direction: 'top' });
       marcador.on('click', () => setDetalleId(p.id));
+      marcador.on('dragstart', () => marcador.closeTooltip());
+      marcador.on('dragend', async () => {
+        const { lat, lng } = marcador.getLatLng();
+        try {
+          await propiedadesApi.actualizarUbicacion(p.id, lat, lng);
+          await recargar();
+        } catch {
+          marcador.setLatLng([p.lat, p.lng]); // no se pudo guardar: volvemos a la posición anterior
+        }
+      });
       return marcador;
     });
   }
@@ -135,6 +148,10 @@ export default function MapaPage() {
                 <Leyenda color={COLOR_ESTADO.DISPONIBLE} label="Disponible" />
                 <Leyenda color={COLOR_ESTADO.ALQUILADA} label="Alquilada" />
                 <Leyenda color={COLOR_ESTADO.EN_REPARACION} label="En reparación" />
+                <span className="flex items-center gap-1.5 text-stone-400" title="OpenStreetMap no tiene la altura exacta de esa calle: el pin queda aproximado. Arrastralo para ubicarlo bien.">
+                  <span className="w-2.5 h-2.5 rounded-full border border-dashed border-stone-400"></span>
+                  Aproximado (arrastrable)
+                </span>
               </div>
             </div>
 

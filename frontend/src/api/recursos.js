@@ -23,6 +23,7 @@ export const propiedadesApi = {
   resumen: () => api.get('/api/propiedades/resumen'),
   crear: data => api.post('/api/propiedades', data),
   actualizar: (id, data) => api.put(`/api/propiedades/${id}`, data),
+  actualizarUbicacion: (id, lat, lng) => api.put(`/api/propiedades/${id}/ubicacion`, { lat, lng }),
   eliminar: id => api.delete(`/api/propiedades/${id}`),
 };
 

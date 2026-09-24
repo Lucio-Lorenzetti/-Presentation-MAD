@@ -17,14 +17,20 @@ function limpiarDireccion(direccion) {
 }
 
 async function buscar(consulta) {
-  const url = `${NOMINATIM_URL}?format=json&limit=1&q=${encodeURIComponent(consulta)}`;
+  const url = `${NOMINATIM_URL}?format=json&addressdetails=1&limit=1&q=${encodeURIComponent(consulta)}`;
   const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
   if (!res.ok) return null;
   const resultados = await res.json();
   if (!resultados.length) return null;
   const lat = Number(resultados[0].lat);
   const lng = Number(resultados[0].lon);
-  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  // OpenStreetMap no tiene el número de puerta cargado para todas las calles de
+  // Bahía Blanca: cuando pasa, Nominatim devuelve igual un resultado, pero es
+  // el centro de la calle entera (no la altura pedida). Lo marcamos como
+  // aproximado en vez de mentir que es una ubicación precisa.
+  const preciso = Boolean(resultados[0].address?.house_number);
+  return { lat, lng, preciso };
 }
 
 async function geocodificar(direccion, barrio) {
@@ -36,7 +42,7 @@ async function geocodificar(direccion, barrio) {
     let resultado = await buscar(`${direccionLimpia}, Bahía Blanca, Argentina`);
     if (!resultado && barrio) resultado = await buscar(`${direccionLimpia}, ${barrio}, Bahía Blanca, Argentina`);
     if (!resultado) return { lat: null, lng: null, geocodingEstado: 'SIN_RESULTADO' };
-    return { ...resultado, geocodingEstado: 'OK' };
+    return { lat: resultado.lat, lng: resultado.lng, geocodingEstado: resultado.preciso ? 'OK' : 'APROXIMADO' };
   } catch (e) {
     return { lat: null, lng: null, geocodingEstado: 'ERROR' };
   }
