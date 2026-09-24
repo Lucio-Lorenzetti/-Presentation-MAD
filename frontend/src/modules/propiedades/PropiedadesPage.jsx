@@ -4,7 +4,7 @@ import Boton from '../../components/Boton';
 import Estado from '../../components/Estado';
 import PropiedadForm from './PropiedadForm';
 import PropiedadDetalle from './PropiedadDetalle';
-import { descargarCSV } from '../../csv';
+import { descargarExcel } from '../../excel';
 import { propiedadesApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
 import { dinero } from '../../format';
@@ -35,7 +35,7 @@ export default function PropiedadesPage() {
   const refrescar = () => { recargar(); recargarResumen(); };
 
   function exportar() {
-    descargarCSV('propiedades.csv', [
+    descargarExcel('propiedades.xlsx', [
       { titulo: 'Dirección', valor: p => p.direccion },
       { titulo: 'Barrio', valor: p => p.barrio },
       { titulo: 'Tipo', valor: p => TIPOS[p.tipo] },
@@ -45,7 +45,7 @@ export default function PropiedadesPage() {
       { titulo: 'm²', valor: p => p.superficie_m2 },
       { titulo: 'Expensas', valor: p => p.expensas },
       { titulo: 'Alquiler', valor: p => p.alquiler_actual ?? p.alquiler_sugerido },
-    ], props);
+    ], props, 'Propiedades');
   }
 
   async function eliminar(p) {
@@ -107,10 +107,10 @@ export default function PropiedadesPage() {
                 <tbody className="divide-y divide-stone-100">
                   {props.map(p => (
                     <tr key={p.id} className="hover:bg-warm-50 transition cursor-pointer" onClick={() => setDetalleId(p.id)}>
-                      <td className="px-4 py-3 font-semibold text-stone-700">{p.direccion}{p.barrio && <span className="block font-normal text-[10px] text-stone-400">{p.barrio}</span>}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${tipoTono[p.tipo]}`}>{TIPOS[p.tipo]}</span></td>
+                      <td className="px-4 py-3 font-semibold text-stone-700">{p.direccion}{p.barrio && <span className="block font-normal text-[13px] text-stone-400">{p.barrio}</span>}</td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[13px] font-semibold ${tipoTono[p.tipo]}`}>{TIPOS[p.tipo]}</span></td>
                       <td className="px-4 py-3 text-stone-500">{p.propietario_nombre || '—'}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${estadoTono[p.estado]}`}>{ESTADOS[p.estado]}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[13px] font-semibold ${estadoTono[p.estado]}`}>{ESTADOS[p.estado]}</span></td>
                       <td className="px-4 py-3 text-stone-500">{p.servicios || '—'}</td>
                       <td className="px-4 py-3 font-semibold text-stone-700">{dinero(p.alquiler_actual ?? p.alquiler_sugerido)}</td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">

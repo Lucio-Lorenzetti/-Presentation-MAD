@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import Topbar from '../../components/Topbar';
 import StatCard from '../../components/StatCard';
+import Boton from '../../components/Boton';
 import EstadoArcaBanner from './EstadoArcaBanner';
 import FacturasTable from './FacturasTable';
 import NuevaFacturaForm from './NuevaFacturaForm';
 import { facturasApi } from '../../api/facturas';
 import { ApiError } from '../../api/client';
+import { descargarExcel } from '../../excel';
+
+const LETRA_POR_TIPO = { 1: 'A', 6: 'B', 11: 'C' };
+const formatFecha = yyyymmdd => yyyymmdd ? `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(0, 4)}` : '—';
 
 export default function FacturacionPage() {
   const [facturas, setFacturas] = useState([]);
@@ -27,9 +32,23 @@ export default function FacturacionPage() {
   const rechazadas = facturas.filter(f => f.resultado === 'R');
   const totalFacturado = aprobadas.reduce((acc, f) => acc + f.importe_total, 0);
 
+  function exportar() {
+    descargarExcel('facturas.xlsx', [
+      { titulo: 'Fecha', valor: f => formatFecha(f.fecha) },
+      { titulo: 'Tipo', valor: f => LETRA_POR_TIPO[f.cbte_tipo] || '?' },
+      { titulo: 'Número', valor: f => `${String(f.pto_vta).padStart(5, '0')}-${String(f.numero).padStart(8, '0')}` },
+      { titulo: 'Cliente', valor: f => f.receptor_razon_social },
+      { titulo: 'Importe neto', valor: f => f.importe_neto },
+      { titulo: 'IVA', valor: f => f.importe_iva },
+      { titulo: 'Importe total', valor: f => f.importe_total },
+      { titulo: 'Resultado', valor: f => f.resultado === 'A' ? 'Aprobada' : 'Rechazada' },
+    ], facturas, 'Facturas');
+  }
+
   return (
     <div className="flex-1 flex flex-col">
       <Topbar title="Facturación y Recibos" subtitle="Integración real con ARCA (WSFEv1) — Facturas A/B/C">
+        <Boton variante="secundario" disabled={!facturas.length} onClick={exportar}><i className="fa-solid fa-download mr-1.5"></i>Exportar</Boton>
         <button
           onClick={cargar}
           className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition"

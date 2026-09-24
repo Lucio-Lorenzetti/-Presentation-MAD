@@ -46,8 +46,8 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
         {p && (
           <>
             <div className="flex items-center gap-2">
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${esProp ? 'bg-amber-50 text-amber-700' : 'bg-sky-50 text-sky-700'}`}>{esProp ? 'Propietario' : 'Inquilino'}</span>
-              {p.lista_negra === 1 && <span className="px-2 py-0.5 rounded bg-red-50 text-red-500 text-[10px] font-bold">Lista negra</span>}
+              <span className={`px-2 py-0.5 rounded text-[13px] font-bold ${esProp ? 'bg-amber-50 text-amber-700' : 'bg-sky-50 text-sky-700'}`}>{esProp ? 'Propietario' : 'Inquilino'}</span>
+              {p.lista_negra === 1 && <span className="px-2 py-0.5 rounded bg-red-50 text-red-500 text-[13px] font-bold">Lista negra</span>}
             </div>
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
@@ -132,7 +132,7 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
 
 const Dato = ({ label, valor }) => (
   <div>
-    <div className="text-stone-400 text-[10px] mb-0.5">{label}</div>
+    <div className="text-stone-400 text-[13px] mb-0.5">{label}</div>
     <div className="font-medium text-stone-700 break-all">{valor || '—'}</div>
   </div>
 );

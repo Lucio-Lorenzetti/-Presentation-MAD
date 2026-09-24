@@ -6,6 +6,8 @@ import FacturacionPage from './modules/facturacion/FacturacionPage';
 import PropiedadesPage from './modules/propiedades/PropiedadesPage';
 import PersonasPage from './modules/personas/PersonasPage';
 import UsuariosPage from './modules/usuarios/UsuariosPage';
+import EstadisticasPage from './modules/estadisticas/EstadisticasPage';
+import InicioPage from './modules/inicio/InicioPage';
 import { useAuth } from './auth';
 
 export default function App() {
@@ -19,7 +21,9 @@ export default function App() {
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Routes>
-          <Route path="/" element={<Navigate to={puede('facturar') ? '/facturacion' : '/alquileres'} replace />} />
+          <Route path="/" element={<Navigate to="/inicio" replace />} />
+          <Route path="/inicio" element={<InicioPage />} />
+          <Route path="/estadisticas" element={<EstadisticasPage />} />
           <Route path="/alquileres" element={<AlquileresPage />} />
           <Route path="/propiedades" element={<PropiedadesPage />} />
           <Route path="/personas" element={<PersonasPage />} />

@@ -1,6 +1,7 @@
 const db = require('../db');
 const { ErrorValidacion, nn, requerir, enumerado, esFechaISO } = require('../utils/validar');
 const { hoyISO, diasEntre, sumarMeses, round2, calcularMora, pad } = require('../utils/fechas');
+const { generarReciboPdf } = require('./pdfService');
 
 const INDICES = ['ICL', 'IPC', 'NINGUNO'];
 
@@ -78,7 +79,13 @@ function obtener(id) {
     return { ...q, diasMora, mora, totalConMora: round2(q.monto + mora) };
   });
   const ajustes = db.prepare('SELECT * FROM ajustes WHERE contrato_id = ? ORDER BY id DESC').all(id);
-  return { ...decorar(c), cuotas, ajustes };
+  const pagos = db.prepare(`
+    SELECT p.*, q.periodo AS periodo, q.vencimiento AS vencimiento
+    FROM pagos p JOIN cuotas q ON q.id = p.cuota_id
+    WHERE q.contrato_id = ?
+    ORDER BY p.id DESC
+  `).all(id);
+  return { ...decorar(c), cuotas, ajustes, pagos };
 }
 
 function crear(d) {
@@ -136,9 +143,15 @@ function cambiarEstado(id, estado) {
   return obtener(id);
 }
 
-function registrarPago(cuotaId, d = {}) {
+async function registrarPago(cuotaId, d = {}) {
   const cuota = db.prepare(`
-    SELECT q.*, c.estado AS contrato_estado FROM cuotas q JOIN contratos c ON c.id = q.contrato_id WHERE q.id = ?
+    SELECT q.*, c.estado AS contrato_estado, c.id AS contrato_id,
+           i.nombre AS inquilino_nombre, p.direccion AS propiedad_direccion
+    FROM cuotas q
+    JOIN contratos c ON c.id = q.contrato_id
+    JOIN personas i ON i.id = c.inquilino_id
+    JOIN propiedades p ON p.id = c.propiedad_id
+    WHERE q.id = ?
   `).get(cuotaId);
   if (!cuota) return null;
   if (cuota.estado === 'PAGADA') throw new ErrorValidacion('La cuota ya está pagada.', 409);
@@ -146,13 +159,39 @@ function registrarPago(cuotaId, d = {}) {
   if (!esFechaISO(fecha)) throw new ErrorValidacion('fecha debe tener formato YYYY-MM-DD.');
   const { diasMora, mora } = calcularMora(cuota.monto, cuota.vencimiento, fecha);
   const total = round2(cuota.monto + mora);
-  return transaccion(() => {
+
+  const pagoId = transaccion(() => {
     const info = db.prepare(`
       INSERT INTO pagos (cuota_id, fecha, monto_cuota, mora, total, metodo, notas) VALUES (?, ?, ?, ?, ?, ?, ?)
     `).run(cuotaId, fecha, cuota.monto, mora, total, nn(d.metodo), nn(d.notas));
     db.prepare("UPDATE cuotas SET estado = 'PAGADA' WHERE id = ?").run(cuotaId);
-    return { id: Number(info.lastInsertRowid), cuotaId: Number(cuotaId), fecha, montoCuota: cuota.monto, diasMora, mora, total, metodo: d.metodo ?? null };
+    return Number(info.lastInsertRowid);
   });
+
+  let pdfPath = null;
+  try {
+    pdfPath = await generarReciboPdf({
+      pagoId,
+      fecha,
+      inquilinoNombre: cuota.inquilino_nombre,
+      propiedadDireccion: cuota.propiedad_direccion,
+      periodo: cuota.periodo,
+      montoCuota: cuota.monto,
+      mora,
+      total,
+      metodo: d.metodo || null,
+    });
+    db.prepare('UPDATE pagos SET pdf_path = ? WHERE id = ?').run(pdfPath, pagoId);
+  } catch (e) {
+    // El pago ya quedó registrado; el recibo se puede regenerar más adelante si hace falta.
+    console.error('No se pudo generar el PDF del recibo:', e);
+  }
+
+  return { id: pagoId, cuotaId: Number(cuotaId), fecha, montoCuota: cuota.monto, diasMora, mora, total, metodo: d.metodo ?? null, pdfPath };
+}
+
+function obtenerPago(pagoId) {
+  return db.prepare('SELECT * FROM pagos WHERE id = ?').get(pagoId);
 }
 
 // Aplica un ajuste por índice (%): actualiza monto_actual y las cuotas futuras aún no vencidas.
@@ -214,4 +253,4 @@ function resumen() {
   };
 }
 
-module.exports = { listar, obtener, crear, cambiarEstado, registrarPago, aplicarAjuste, resumen };
+module.exports = { listar, obtener, crear, cambiarEstado, registrarPago, obtenerPago, aplicarAjuste, resumen };

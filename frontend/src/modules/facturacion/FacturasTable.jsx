@@ -34,7 +34,7 @@ export default function FacturasTable({ facturas, cargando }) {
               <tr key={f.id} className="hover:bg-warm-50 transition">
                 <td className="px-4 py-3 text-stone-500">{formatFecha(f.fecha)}</td>
                 <td className="px-4 py-3">
-                  <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-semibold">
+                  <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded-full text-[13px] font-semibold">
                     {LETRA_POR_TIPO[f.cbte_tipo] || '?'}
                   </span>
                 </td>
@@ -45,9 +45,9 @@ export default function FacturasTable({ facturas, cargando }) {
                 <td className="px-4 py-3 font-semibold text-stone-700">$ {f.importe_total.toFixed(2)}</td>
                 <td className="px-4 py-3">
                   {f.resultado === 'A' ? (
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold">Aprobada</span>
+                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[13px] font-semibold">Aprobada</span>
                   ) : (
-                    <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[10px] font-semibold">Rechazada</span>
+                    <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[13px] font-semibold">Rechazada</span>
                   )}
                 </td>
                 <td className="px-4 py-3">
@@ -57,7 +57,7 @@ export default function FacturasTable({ facturas, cargando }) {
                       className="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"
                       title="Ver PDF"
                     >
-                      <i className="fa-solid fa-file-pdf text-[10px]"></i>
+                      <i className="fa-solid fa-file-pdf text-[13px]"></i>
                     </button>
                   )}
                 </td>

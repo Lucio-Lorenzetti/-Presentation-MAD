@@ -13,6 +13,12 @@ function diasEntre(desdeISO, hastaISO) {
   return Math.round((b - a) / 86400000);
 }
 
+function sumarDias(iso, dias) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const fecha = new Date(Date.UTC(y, m - 1, d + dias));
+  return `${fecha.getUTCFullYear()}-${pad(fecha.getUTCMonth() + 1)}-${pad(fecha.getUTCDate())}`;
+}
+
 // Suma meses respetando fin de mes (31/01 + 1 mes = 28/02).
 function sumarMeses(iso, meses) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -32,4 +38,4 @@ function calcularMora(monto, vencimientoISO, hastaISO = hoyISO()) {
   return { diasMora: dias, mora: round2(monto * TASA_MORA_DIARIA * dias) };
 }
 
-module.exports = { TASA_MORA_DIARIA, hoyISO, diasEntre, sumarMeses, round2, calcularMora, pad };
+module.exports = { TASA_MORA_DIARIA, hoyISO, diasEntre, sumarDias, sumarMeses, round2, calcularMora, pad };

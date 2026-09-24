@@ -43,10 +43,14 @@ nunca calcula reglas de negocio (mora, ajustes) — las devuelve el backend.
 
 | Módulo | Backend | Frontend | Notas |
 |---|---|---|---|
+| Inicio (calendario de vencimientos) | ✅ | ✅ | Cobros, ajustes IPC/ICL y fin de contrato — hoy/semana/mes, aviso por WhatsApp |
 | Facturación ARCA | ✅ | ✅ | Falta certificado del cliente |
+| Recibos de pago (no fiscales) + envío por WhatsApp | ✅ | ✅ | PDF por pago (`storage/recibos/`); WhatsApp = wa.me precargado + descarga manual del PDF (sin API de Meta) |
 | Personas (propietarios/inquilinos/garantes) | ✅ | ✅ | |
 | Propiedades | ✅ | ✅ | |
 | Contratos + cuotas + pagos | ✅ | ✅ | Mora 0,5 % diario, ajuste manual IPC/ICL |
+| Estadísticas (dashboard) | ✅ | ✅ | Cobrado vs facturado por mes, propiedades por estado, top deudores |
+| Exportación a Excel (.xlsx) | — | ✅ | Personas, Propiedades, Alquileres, Facturación, Estadísticas |
 | Login + roles + usuarios | ✅ | ✅ | Ver matriz de permisos abajo |
 
 ## Roles y permisos
@@ -68,7 +72,7 @@ Sesión: token firmado de 8 h, contraseñas con scrypt, bloqueo tras 5 intentos 
 **Fase 1 — MVP (prioridad alta)**
 1. ✅ Personas, Propiedades, Contratos, Pagos con mora
 2. ✅ Auth + roles (Desarrollador, Administrador, Gestor, Consulta)
-3. Recibos de alquiler/honorarios en PDF (reusar `pdfService`) + vincular facturación a contrato/pago
+3. ✅ Recibos de pago en PDF (reusa `pdfService`) vinculados al pago de cada cuota, con envío por WhatsApp (chat precargado + descarga del PDF)
 4. Índices IPC/ICL automáticos (traer valores oficiales y proponer el ajuste)
 5. Notificaciones por email (vencimientos 15 días antes, mora, ajustes) + job programado
 

@@ -4,7 +4,7 @@ import Boton from '../../components/Boton';
 import Estado from '../../components/Estado';
 import PersonaForm from './PersonaForm';
 import PersonaDetalle from './PersonaDetalle';
-import { descargarCSV } from '../../csv';
+import { descargarExcel } from '../../excel';
 import { formatDni } from '../../format';
 import { personasApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
@@ -35,7 +35,7 @@ export default function PersonasPage() {
   const { datos: personas, cargando, error, recargar } = useCarga(() => personasApi.listar(params), [filtro, q]);
 
   function exportar() {
-    descargarCSV('personas.csv', [
+    descargarExcel('personas.xlsx', [
       { titulo: 'Nombre', valor: p => p.nombre },
       { titulo: 'Tipo', valor: p => tipoLabel[p.tipo] },
       { titulo: 'DNI', valor: p => p.dni },
@@ -45,7 +45,7 @@ export default function PersonasPage() {
       { titulo: 'Domicilio', valor: p => p.domicilio },
       { titulo: 'Método cobro/pago', valor: p => p.metodo_cobro },
       { titulo: 'Lista negra', valor: p => (p.lista_negra ? 'Sí' : 'No') },
-    ], personas);
+    ], personas, 'Personas');
   }
 
   async function eliminar(p) {
@@ -113,14 +113,14 @@ export default function PersonasPage() {
                     <tr key={p.id} className="hover:bg-warm-50 transition cursor-pointer" onClick={() => setDetalleId(p.id)}>
                       <td className="px-4 py-3 font-semibold text-stone-700">
                         {p.nombre}
-                        {p.lista_negra === 1 && <span className="ml-2 px-1.5 py-0.5 rounded bg-red-50 text-red-500 text-[10px] font-bold">Lista negra</span>}
+                        {p.lista_negra === 1 && <span className="ml-2 px-1.5 py-0.5 rounded bg-red-50 text-red-500 text-[13px] font-bold">Lista negra</span>}
                       </td>
-                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${tipoTono[p.tipo]}`}>{tipoLabel[p.tipo]}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[13px] font-bold ${tipoTono[p.tipo]}`}>{tipoLabel[p.tipo]}</span></td>
                       <td className="px-4 py-3 font-mono text-stone-500">{formatDni(p.dni)}</td>
                       <td className="px-4 py-3 text-stone-500">{p.email || '—'}</td>
                       <td className="px-4 py-3">
                         {p.metodo_cobro
-                          ? <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-semibold">{p.metodo_cobro}</span>
+                          ? <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[13px] font-semibold">{p.metodo_cobro}</span>
                           : <span className="text-stone-300">—</span>}
                       </td>
                       <td className="px-4 py-3 text-stone-400">{p.tipo === 'PROPIETARIO'

@@ -115,4 +115,5 @@ module.exports.migrar = function migrar(db) {
     barrio: 'TEXT', ambientes: 'INTEGER', dormitorios: 'INTEGER', banos: 'INTEGER',
     superficie_m2: 'REAL', expensas: 'REAL', partida: 'TEXT', descripcion: 'TEXT',
   });
+  agregar('pagos', { pdf_path: 'TEXT' });
 };

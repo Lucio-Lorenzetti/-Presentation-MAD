@@ -13,6 +13,9 @@ const { CBTE_TIPO } = require('../utils/afipCodes');
 const STORAGE_DIR = path.resolve(process.cwd(), 'storage', 'facturas');
 fs.mkdirSync(STORAGE_DIR, { recursive: true });
 
+const RECIBOS_DIR = path.resolve(process.cwd(), 'storage', 'recibos');
+fs.mkdirSync(RECIBOS_DIR, { recursive: true });
+
 const LETRA_POR_TIPO = {
   [CBTE_TIPO.FACTURA_A]: 'A',
   [CBTE_TIPO.FACTURA_B]: 'B',
@@ -131,6 +134,100 @@ async function generarFacturaPdf(factura) {
   return filePath;
 }
 
+/**
+ * Genera el PDF de un recibo de pago (comprobante interno, NO fiscal).
+ * No lleva CAE ni QR de ARCA: es un respaldo para el inquilino de que
+ * abonó una cuota, pensado para entregarse por WhatsApp o email.
+ *
+ * @param {Object} recibo
+ * @param {number} recibo.pagoId
+ * @param {string} recibo.fecha - 'YYYY-MM-DD'
+ * @param {string} recibo.inquilinoNombre
+ * @param {string} recibo.propiedadDireccion
+ * @param {string} recibo.periodo - 'YYYY-MM'
+ * @param {number} recibo.montoCuota
+ * @param {number} recibo.mora
+ * @param {number} recibo.total
+ * @param {string} [recibo.metodo]
+ */
+async function generarReciboPdf(recibo) {
+  const filePath = path.join(RECIBOS_DIR, `recibo-${recibo.pagoId}.pdf`);
+  const doc = new PDFDocument({ size: 'A4', margin: 40 });
+  const stream = fs.createWriteStream(filePath);
+  doc.pipe(stream);
+
+  // Encabezado
+  doc.rect(40, 40, 515, 90).stroke();
+  doc.fontSize(16).text(config.emisor.razonSocial, 50, 50);
+  doc.fontSize(9).text(config.emisor.domicilio, 50, 70);
+  doc.fontSize(9).text(`CUIT: ${config.arca.cuit}`, 50, 84);
+
+  doc.rect(420, 40, 135, 30).stroke();
+  doc.fontSize(14).text('RECIBO', 428, 47);
+  doc.fontSize(9).text(`N° R-${String(recibo.pagoId).padStart(8, '0')}`, 400, 90);
+
+  let y = 145;
+  doc.fontSize(10).text(`Fecha de pago: ${formatFechaISO(recibo.fecha)}`, 40, y);
+  y += 20;
+  doc.text(`Recibí de: ${recibo.inquilinoNombre}`, 40, y);
+  y += 15;
+  doc.text(`Inmueble: ${recibo.propiedadDireccion}`, 40, y);
+  y += 15;
+  doc.text(`Período alquilado: ${recibo.periodo}`, 40, y);
+  y += 15;
+  if (recibo.metodo) {
+    doc.text(`Método de pago: ${recibo.metodo}`, 40, y);
+    y += 15;
+  }
+  y += 10;
+
+  // Detalle
+  doc.moveTo(40, y).lineTo(555, y).stroke();
+  y += 8;
+  doc.fontSize(9).text('Concepto', 40, y);
+  doc.text('Importe', 480, y);
+  y += 14;
+  doc.moveTo(40, y).lineTo(555, y).stroke();
+  y += 8;
+  doc.fontSize(9).text(`Alquiler — período ${recibo.periodo}`, 40, y, { width: 400 });
+  doc.text(`$ ${recibo.montoCuota.toFixed(2)}`, 480, y);
+  y += 18;
+  if (recibo.mora > 0) {
+    doc.fillColor('#B91C1C').text('Interés por mora', 40, y, { width: 400 });
+    doc.text(`$ ${recibo.mora.toFixed(2)}`, 480, y);
+    doc.fillColor('black');
+    y += 18;
+  }
+  y += 12;
+
+  doc.moveTo(320, y).lineTo(555, y).stroke();
+  y += 8;
+  doc.fontSize(12).text('TOTAL PAGADO:', 320, y);
+  doc.text(`$ ${recibo.total.toFixed(2)}`, 480, y);
+  y += 60;
+
+  doc.fontSize(8).fillColor('#78716C').text(
+    'Recibo interno de pago — no válido como factura. No reemplaza al comprobante fiscal emitido por ARCA.',
+    40, 780, { width: 515, align: 'center' }
+  );
+  doc.fillColor('black');
+
+  doc.end();
+
+  await new Promise((resolve, reject) => {
+    stream.on('finish', resolve);
+    stream.on('error', reject);
+  });
+
+  return filePath;
+}
+
+function formatFechaISO(isoDate) {
+  if (!isoDate) return '-';
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}/${y}`;
+}
+
 function formatFecha(yyyymmdd) {
   if (!yyyymmdd) return '-';
   return `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(0, 4)}`;
@@ -143,4 +240,4 @@ function docTipoLabel(docTipo) {
   return 'Doc.';
 }
 
-module.exports = { generarFacturaPdf };
+module.exports = { generarFacturaPdf, generarReciboPdf };

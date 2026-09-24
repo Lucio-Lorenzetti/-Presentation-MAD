@@ -61,3 +61,25 @@ export async function abrirPdf(id) {
   window.open(url, '_blank');
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+async function blobDeRecibo(pagoId) {
+  const res = await fetch(`${BASE_URL}/api/contratos/cuotas/pagos/${pagoId}/recibo.pdf`, { headers: headers() });
+  if (!res.ok) throw new ApiError('No se pudo obtener el recibo.', res.status);
+  return res.blob();
+}
+
+export async function abrirReciboPdf(pagoId) {
+  const url = URL.createObjectURL(await blobDeRecibo(pagoId));
+  window.open(url, '_blank');
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+// Descarga el PDF del recibo a disco (para adjuntarlo a mano en WhatsApp).
+export async function descargarReciboPdf(pagoId, nombreArchivo) {
+  const url = URL.createObjectURL(await blobDeRecibo(pagoId));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nombreArchivo || `recibo-${pagoId}.pdf`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}

@@ -23,6 +23,8 @@ app.use('/api/usuarios', autenticar, autorizar, require('./routes/usuarios'));
 app.use('/api/personas', autenticar, autorizar, require('./routes/personas'));
 app.use('/api/propiedades', autenticar, autorizar, require('./routes/propiedades'));
 app.use('/api/contratos', autenticar, autorizar, require('./routes/contratos'));
+app.use('/api/estadisticas', autenticar, autorizar, require('./routes/estadisticas'));
+app.use('/api/agenda', autenticar, autorizar, require('./routes/agenda'));
 
 app.use((err, req, res, next) => {
   console.error(err);

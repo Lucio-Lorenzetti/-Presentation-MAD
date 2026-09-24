@@ -35,8 +35,8 @@ export default function UsuariosPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {Object.entries(ROLES).map(([k, v]) => (
             <div key={k} className="bg-warm-50 border border-stone-100 rounded-xl p-3">
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${rolTono[k]}`}>{v}</span>
-              <p className="text-[11px] text-stone-500 mt-2">{DESCRIPCION[k]}</p>
+              <span className={`px-2 py-0.5 rounded text-[13px] font-bold ${rolTono[k]}`}>{v}</span>
+              <p className="text-[14px] text-stone-500 mt-2">{DESCRIPCION[k]}</p>
             </div>
           ))}
         </div>
@@ -58,11 +58,11 @@ export default function UsuariosPage() {
               <tbody className="divide-y divide-stone-100">
                 {usuarios.map(u => (
                   <tr key={u.id} className="hover:bg-warm-50 transition">
-                    <td className="px-4 py-3 font-semibold text-stone-700">{u.nombre}{u.id === yo.id && <span className="ml-2 text-[10px] text-stone-400">(vos)</span>}</td>
+                    <td className="px-4 py-3 font-semibold text-stone-700">{u.nombre}{u.id === yo.id && <span className="ml-2 text-[13px] text-stone-400">(vos)</span>}</td>
                     <td className="px-4 py-3 text-stone-500">{u.email}</td>
-                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${rolTono[u.rol]}`}>{ROLES[u.rol]}</span></td>
+                    <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-[13px] font-bold ${rolTono[u.rol]}`}>{ROLES[u.rol]}</span></td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${u.activo ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>{u.activo ? 'Activo' : 'Desactivado'}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[13px] font-semibold ${u.activo ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>{u.activo ? 'Activo' : 'Desactivado'}</span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button onClick={() => setEditando(u)} className="text-stone-400 hover:text-brand-600" title="Editar"><i className="fa-solid fa-pen"></i></button>
@@ -121,7 +121,7 @@ function UsuarioForm({ usuario, yo, onCerrar, onGuardado }) {
             {rolesDisponibles.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </Campo>
-        <p className="text-[11px] text-stone-400 -mt-2">{DESCRIPCION[form.rol]}</p>
+        <p className="text-[14px] text-stone-400 -mt-2">{DESCRIPCION[form.rol]}</p>
         <Campo label={usuario ? 'Nueva contraseña (dejar vacío para no cambiarla)' : 'Contraseña (mínimo 8 caracteres)'}>
           <input className="input" type="password" minLength={8} required={!usuario} autoComplete="new-password" value={form.password} onChange={e => set('password', e.target.value)} />
         </Campo>

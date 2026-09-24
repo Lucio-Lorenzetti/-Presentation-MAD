@@ -40,7 +40,7 @@ export default function PropiedadDetalle({ id, onCerrar, onEditar, onCambio }) {
 
         {p && (
           <>
-            <div className="flex items-center gap-2 text-[10px] font-bold">
+            <div className="flex items-center gap-2 text-[13px] font-bold">
               <span className="px-2 py-0.5 rounded bg-stone-100 text-stone-600">{TIPOS[p.tipo]}</span>
               <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">{ESTADOS[p.estado]}</span>
             </div>
@@ -85,7 +85,7 @@ export default function PropiedadDetalle({ id, onCerrar, onEditar, onCambio }) {
 
 const Dato = ({ label, valor }) => (
   <div>
-    <div className="text-stone-400 text-[10px] mb-0.5">{label}</div>
+    <div className="text-stone-400 text-[13px] mb-0.5">{label}</div>
     <div className="font-medium text-stone-700">{valor || '—'}</div>
   </div>
 );

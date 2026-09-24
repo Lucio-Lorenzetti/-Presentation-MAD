@@ -6,5 +6,6 @@ certs/*.crt
 certs/*.csr
 data/*.db
 storage/facturas/*.pdf
+storage/recibos/*.pdf
 .wsaa-cache/
 data/.jwt-secret

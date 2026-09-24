@@ -2,6 +2,8 @@ import { useState } from 'react';
 import Modal from '../../components/Modal';
 import Boton from '../../components/Boton';
 import { contratosApi } from '../../api/recursos';
+import { abrirReciboPdf, descargarReciboPdf } from '../../api/client';
+import { armarLinkWhatsApp, mensajeRecibo } from '../../whatsapp';
 import { useCarga } from '../../hooks';
 import { dinero, fecha } from '../../format';
 import { useAuth } from '../../auth';
@@ -13,6 +15,7 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
   const [errorAccion, setErrorAccion] = useState(null);
   const [ocupado, setOcupado] = useState(false);
   const [verTodas, setVerTodas] = useState(false);
+  const [enviando, setEnviando] = useState(null);
 
   async function accion(fn) {
     setOcupado(true);
@@ -44,6 +47,26 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
   const cerrar = estado => {
     if (!window.confirm(`¿Marcar el contrato como ${estado.toLowerCase()}? La propiedad quedará disponible.`)) return;
     accion(() => contratosApi.cerrar(id, estado));
+  };
+
+  const verRecibo = p => abrirReciboPdf(p.id).catch(e => setErrorAccion(e.message));
+  const enviarWhatsapp = async p => {
+    setEnviando(p.id);
+    setErrorAccion(null);
+    try {
+      await descargarReciboPdf(p.id, `recibo-${c.inquilino_nombre.replace(/\s+/g, '-')}-${p.periodo}.pdf`);
+      const mensaje = mensajeRecibo({
+        inquilinoNombre: c.inquilino_nombre,
+        propiedadDireccion: c.propiedad_direccion,
+        periodo: p.periodo,
+        total: p.total,
+      });
+      window.open(armarLinkWhatsApp(mensaje), '_blank');
+    } catch (e) {
+      setErrorAccion(e.message);
+    } finally {
+      setEnviando(null);
+    }
   };
 
   const cuotas = c?.cuotas || [];
@@ -105,7 +128,7 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
                         <td className="px-3 py-2 text-stone-700">{dinero(q.monto)}</td>
                         <td className={`px-3 py-2 ${q.mora > 0 ? 'text-red-600 font-semibold' : 'text-stone-300'}`}>{q.mora > 0 ? `${dinero(q.mora)} (${q.diasMora} d)` : '—'}</td>
                         <td className="px-3 py-2">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${q.estado === 'PAGADA' ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-500'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-[13px] font-semibold ${q.estado === 'PAGADA' ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-500'}`}>
                             {q.estado === 'PAGADA' ? 'Pagada' : 'Pendiente'}
                           </span>
                         </td>
@@ -123,6 +146,57 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
                 </table>
               </div>
             </div>
+
+            {c.pagos && c.pagos.length > 0 && (
+              <div>
+                <h4 className="text-xs font-bold text-stone-700 mb-2">Pagos registrados</h4>
+                <div className="border border-stone-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-semibold">Fecha</th>
+                        <th className="text-left px-3 py-2 font-semibold">Período</th>
+                        <th className="text-left px-3 py-2 font-semibold">Total pagado</th>
+                        <th className="text-left px-3 py-2 font-semibold">Método</th>
+                        <th className="px-3 py-2 text-right">Comprobante</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {c.pagos.map(p => (
+                        <tr key={p.id}>
+                          <td className="px-3 py-2 text-stone-500">{fecha(p.fecha)}</td>
+                          <td className="px-3 py-2 font-semibold text-stone-700">{p.periodo}</td>
+                          <td className="px-3 py-2 text-stone-700">
+                            {dinero(p.total)}
+                            {p.mora > 0 && <span className="ml-1.5 text-[13px] text-red-500">(mora {dinero(p.mora)})</span>}
+                          </td>
+                          <td className="px-3 py-2 text-stone-500">{p.metodo || '—'}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => verRecibo(p)}
+                                className="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-brand-50 hover:text-brand-600 flex items-center justify-center transition"
+                                title="Ver recibo en PDF"
+                              >
+                                <i className="fa-solid fa-file-pdf text-[13px]"></i>
+                              </button>
+                              <button
+                                onClick={() => enviarWhatsapp(p)}
+                                disabled={enviando === p.id}
+                                className="w-6 h-6 rounded bg-stone-100 text-stone-400 hover:bg-emerald-50 hover:text-emerald-600 flex items-center justify-center transition disabled:opacity-50"
+                                title="Descargar recibo y enviar por WhatsApp"
+                              >
+                                <i className="fa-brands fa-whatsapp text-[14px]"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {c.ajustes.length > 0 && (
               <div>
@@ -151,7 +225,7 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
 function Dato({ label, valor }) {
   return (
     <div className="bg-warm-50 border border-stone-100 rounded-lg px-3 py-2">
-      <div className="text-stone-400 text-[10px] mb-0.5">{label}</div>
+      <div className="text-stone-400 text-[13px] mb-0.5">{label}</div>
       <div className="font-semibold text-stone-700">{valor}</div>
     </div>
   );

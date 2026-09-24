@@ -7,8 +7,15 @@ import NuevoContratoForm from './NuevoContratoForm';
 import ContratoDetalle from './ContratoDetalle';
 import { contratosApi } from '../../api/recursos';
 import { useCarga } from '../../hooks';
-import { dinero } from '../../format';
+import { dinero, fecha } from '../../format';
 import { useAuth } from '../../auth';
+import { descargarExcel } from '../../excel';
+
+const ESTADO_CUOTA_LABEL = {
+  VENCIDA: e => `Vencida hace ${e.diasMora} día${e.diasMora === 1 ? '' : 's'}`,
+  AJUSTE_PENDIENTE: e => `Ajuste ${e.indice} pendiente`,
+  AL_DIA: () => 'Al día',
+};
 
 const indiceTono = { ICL: 'bg-blue-50 text-blue-600', IPC: 'bg-violet-50 text-violet-600', NINGUNO: 'bg-stone-100 text-stone-400' };
 const estadoContratoTono = {
@@ -18,12 +25,12 @@ const estadoContratoTono = {
 function EstadoCuota({ e }) {
   if (e.tipo === 'VENCIDA') {
     const extra = e.cantVencidas > 1 ? ` (${e.cantVencidas} cuotas)` : '';
-    return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600">Vencida hace {e.diasMora} día{e.diasMora === 1 ? '' : 's'}{extra}</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[13px] font-semibold bg-red-50 text-red-600">Vencida hace {e.diasMora} día{e.diasMora === 1 ? '' : 's'}{extra}</span>;
   }
   if (e.tipo === 'AJUSTE_PENDIENTE') {
-    return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-600">⚡ Ajuste {e.indice} pendiente</span>;
+    return <span className="px-2 py-0.5 rounded-full text-[13px] font-semibold bg-amber-50 text-amber-600">⚡ Ajuste {e.indice} pendiente</span>;
   }
-  return <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600">Al día</span>;
+  return <span className="px-2 py-0.5 rounded-full text-[13px] font-semibold bg-emerald-50 text-emerald-600">Al día</span>;
 }
 
 export default function AlquileresPage() {
@@ -39,12 +46,27 @@ export default function AlquileresPage() {
   const refrescar = () => { recargar(); recargarResumen(); };
   const pct = r && r.esperadoMes > 0 ? Math.round((r.cobrosMes / r.esperadoMes) * 100) : 0;
 
+  function exportar() {
+    descargarExcel('contratos.xlsx', [
+      { titulo: 'Inquilino', valor: c => c.inquilino_nombre },
+      { titulo: 'Propiedad', valor: c => c.propiedad_direccion },
+      { titulo: 'Alquiler actual', valor: c => c.monto_actual },
+      { titulo: 'Índice', valor: c => c.indice },
+      { titulo: 'Inicio', valor: c => fecha(c.fecha_inicio) },
+      { titulo: 'Fin', valor: c => fecha(c.fecha_fin) },
+      { titulo: 'Próx. actualización', valor: c => c.proxima_actualizacion ? fecha(c.proxima_actualizacion) : '' },
+      { titulo: 'Estado contrato', valor: c => c.estado },
+      { titulo: 'Estado cuota', valor: c => c.estado === 'ACTIVO' ? ESTADO_CUOTA_LABEL[c.estadoCuota.tipo](c.estadoCuota) : '' },
+    ], contratos, 'Contratos');
+  }
+
   return (
     <div className="flex-1 flex flex-col">
       <Topbar
         title="Alquileres y Contratos"
         subtitle={r ? `${r.contratosActivos} contratos activos · ${r.porVencer} por vencer · ${r.cuotasVencidas} cuotas vencidas` : ' '}
       >
+        <Boton variante="secundario" disabled={!contratos?.length} onClick={exportar}><i className="fa-solid fa-download mr-1.5"></i>Exportar</Boton>
         {puede('escribir') && <Boton onClick={() => setNuevo(true)}><i className="fa-solid fa-plus mr-1.5"></i>Nuevo contrato</Boton>}
       </Topbar>
 
@@ -91,11 +113,11 @@ export default function AlquileresPage() {
                         <td className="px-4 py-3 font-semibold text-stone-700">{c.inquilino_nombre}</td>
                         <td className="px-4 py-3 text-stone-500">{c.propiedad_direccion}</td>
                         <td className="px-4 py-3 font-semibold text-stone-700">{dinero(c.monto_actual)}</td>
-                        <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${indiceTono[c.indice]}`}>{c.indice === 'NINGUNO' ? 'Sin índice' : c.indice}</span></td>
+                        <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-[13px] font-semibold ${indiceTono[c.indice]}`}>{c.indice === 'NINGUNO' ? 'Sin índice' : c.indice}</span></td>
                         <td className="px-4 py-3">
                           {c.estado === 'ACTIVO'
                             ? <EstadoCuota e={c.estadoCuota} />
-                            : <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${estadoContratoTono[c.estado]}`}>{c.estado.charAt(0) + c.estado.slice(1).toLowerCase()}</span>}
+                            : <span className={`px-2 py-0.5 rounded-full text-[13px] font-semibold ${estadoContratoTono[c.estado]}`}>{c.estado.charAt(0) + c.estado.slice(1).toLowerCase()}</span>}
                         </td>
                         <td className="px-4 py-3 text-right text-stone-300"><i className="fa-solid fa-chevron-right"></i></td>
                       </tr>

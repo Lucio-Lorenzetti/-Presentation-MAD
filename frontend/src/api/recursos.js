@@ -36,6 +36,14 @@ export const contratosApi = {
   pagarCuota: (cuotaId, data) => api.post(`/api/contratos/cuotas/${cuotaId}/pagos`, data),
 };
 
+export const estadisticasApi = {
+  panel: () => api.get('/api/estadisticas'),
+};
+
+export const agendaApi = {
+  listar: () => api.get('/api/agenda'),
+};
+
 export const usuariosApi = {
   listar: () => api.get('/api/usuarios'),
   crear: data => api.post('/api/usuarios', data),

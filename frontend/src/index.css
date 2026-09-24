@@ -23,6 +23,13 @@
   --font-sans: 'Inter', system-ui, sans-serif;
 }
 
+/* Letra más grande en toda la app (accesibilidad): todos los tamaños de
+   Tailwind son relativos al root, así que esto escala texto Y espaciados
+   por igual, sin romper proporciones. */
+html {
+  font-size: 125%;
+}
+
 body {
   font-family: var(--font-sans);
 }
