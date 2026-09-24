@@ -70,10 +70,10 @@ export default function PropiedadesPage() {
       </Topbar>
 
       <div className="px-6 py-5">
-        <div className="flex items-center gap-2 mb-5 p-3 bg-stone-50 rounded-xl border border-stone-100">
+        <div className="flex flex-wrap items-center gap-2 mb-5 p-3 bg-stone-50 rounded-xl border border-stone-100">
           <input
             type="text" placeholder="Buscar dirección…" value={q} onChange={e => setQ(e.target.value)}
-            className="flex-1 text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
+            className="flex-1 min-w-[10rem] text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
           />
           <select value={tipo} onChange={e => setTipo(e.target.value)} className="text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white text-stone-500 focus:outline-none">
             <option value="">Tipo</option>

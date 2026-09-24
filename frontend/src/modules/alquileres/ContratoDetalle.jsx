@@ -203,8 +203,8 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
                     <div className="text-[13px] font-bold text-brand-600 uppercase tracking-wide mb-1">
                       <i className="fa-solid fa-circle-exclamation mr-1.5"></i>Próxima cuota a vencer
                     </div>
-                    <div className="text-sm font-bold text-stone-800">{proxima.periodo} · vence {fecha(proxima.vencimiento)}</div>
-                    <div className="text-xs text-stone-600 mt-0.5">
+                    <div className="text-sm font-bold text-brand-900">{proxima.periodo} · vence {fecha(proxima.vencimiento)}</div>
+                    <div className="text-xs text-brand-700 mt-0.5">
                       {dinero(proxima.monto)}
                       {proxima.mora > 0 && (
                         <span className="ml-1.5 text-red-600 font-semibold">+ {dinero(proxima.mora)} de mora ({proxima.diasMora} días)</span>
@@ -226,6 +226,7 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
                 </button>
               </div>
               <div className="border border-stone-200 rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
                     <tr>
@@ -262,12 +263,14 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
                   </tbody>
                 </table>
               </div>
+              </div>
             </div>
 
             {c.pagos && c.pagos.length > 0 && (
               <div>
                 <h4 className="text-xs font-bold text-stone-700 mb-2">Pagos registrados</h4>
                 <div className="border border-stone-200 rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
                       <tr>
@@ -335,6 +338,7 @@ export default function ContratoDetalle({ id, onCerrar, onCambio }) {
                       ))}
                     </tbody>
                   </table>
+                </div>
                 </div>
               </div>
             )}

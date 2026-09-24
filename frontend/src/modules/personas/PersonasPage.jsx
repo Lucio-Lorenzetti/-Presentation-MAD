@@ -85,7 +85,7 @@ export default function PersonasPage() {
           ))}
           <input
             type="text" placeholder="Buscar nombre, DNI o email…" value={q} onChange={e => setQ(e.target.value)}
-            className="ml-auto text-xs px-3 py-1.5 border border-stone-200 rounded-lg w-64 bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
+            className="w-full sm:w-64 sm:ml-auto text-xs px-3 py-1.5 border border-stone-200 rounded-lg bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
           />
         </div>
 

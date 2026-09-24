@@ -49,7 +49,7 @@ export default function PersonaForm({ persona, tipoInicial = 'INQUILINO', onCerr
   return (
     <Modal titulo={persona ? 'Editar persona' : 'Nueva persona'} onCerrar={onCerrar}>
       <form onSubmit={submit} className="p-6 space-y-4 text-sm">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Campo label="Nombre completo / razón social">
             <input className="input" required value={form.nombre} onChange={e => set('nombre', e.target.value)} />
           </Campo>
@@ -68,7 +68,7 @@ export default function PersonaForm({ persona, tipoInicial = 'INQUILINO', onCerr
           <input className="input" value={form.domicilio} onChange={e => set('domicilio', e.target.value)} />
         </Campo>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Campo label={esProp ? 'Método de cobro' : 'Método de pago'}>
             <select className="input" value={form.metodoCobro} onChange={e => set('metodoCobro', e.target.value)}>
               <option value="">—</option>
@@ -103,7 +103,7 @@ export default function PersonaForm({ persona, tipoInicial = 'INQUILINO', onCerr
               <button type="button" className="text-xs text-brand-600 hover:underline" onClick={() => setGarantes(g => [...g, { nombre: '', dni: '', tipoGarantia: GARANTIAS[0] }])}>+ Agregar</button>
             </div>
             {garantes.map((g, i) => (
-              <div key={i} className="grid grid-cols-3 gap-2 mb-2">
+              <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <input className="input" placeholder="Nombre" value={g.nombre} onChange={e => setGarante(i, 'nombre', e.target.value)} />
                 <input className="input" placeholder="DNI" value={g.dni} onChange={e => setGarante(i, 'dni', e.target.value)} />
                 <select className="input" value={g.tipoGarantia} onChange={e => setGarante(i, 'tipoGarantia', e.target.value)}>

@@ -18,14 +18,18 @@ const links = [
 ];
 
 const CLAVE_COLAPSADO = 'mad_sidebar_colapsado';
+const CLAVE_TEMA = 'mad_tema';
 
 export default function Sidebar() {
   const { usuario, logout, puede } = useAuth();
   const [cambiando, setCambiando] = useState(false);
+  const [abiertoMobile, setAbiertoMobile] = useState(false);
   const [colapsado, setColapsado] = useState(() => {
     try { return localStorage.getItem(CLAVE_COLAPSADO) === '1'; } catch { return false; }
   });
+  const [oscuro, setOscuro] = useState(() => document.documentElement.classList.contains('dark'));
   const iniciales = usuario.nombre.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+  const linksVisibles = links.filter(l => !l.permiso || puede(l.permiso));
 
   function alternarColapsado() {
     setColapsado(v => {
@@ -35,76 +39,129 @@ export default function Sidebar() {
     });
   }
 
+  function alternarTema() {
+    setOscuro(v => {
+      const nuevo = !v;
+      document.documentElement.classList.toggle('dark', nuevo);
+      try { localStorage.setItem(CLAVE_TEMA, nuevo ? 'oscuro' : 'claro'); } catch { /* sin storage */ }
+      return nuevo;
+    });
+  }
+
   return (
-    <div className={`${colapsado ? 'w-16' : 'w-56'} bg-stone-50 border-r border-stone-200 flex flex-col shrink-0 h-screen sticky top-0 transition-[width] duration-200`}>
-      <div className={`px-3 py-4 border-b border-stone-200 flex items-center gap-2 ${colapsado ? 'flex-col' : ''}`}>
-        <div className={`flex items-center gap-2.5 min-w-0 ${colapsado ? '' : 'flex-1'}`}>
+    <>
+      {/* Barra superior en mobile: logo + botón hamburguesa. El menú lateral fijo (abajo) sólo se ve desde md hacia arriba. */}
+      <div className="md:hidden sticky top-0 z-30 bg-stone-50 border-b border-stone-200 flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white text-xs font-extrabold shrink-0">M</div>
-          {!colapsado && (
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-stone-800 leading-none">MAD</div>
-              <div className="text-[13px] text-stone-400">Gestión Inmobiliaria</div>
-            </div>
-          )}
+          <div className="text-sm font-bold text-stone-800 leading-none">MAD</div>
         </div>
         <button
-          onClick={alternarColapsado}
-          title={colapsado ? 'Expandir menú' : 'Fijar menú angosto'}
-          className={`w-6 h-6 shrink-0 rounded-full text-stone-400 hover:bg-stone-200 hover:text-brand-600 transition flex items-center justify-center ${colapsado ? 'mt-1' : ''}`}
+          onClick={() => setAbiertoMobile(true)}
+          className="w-9 h-9 rounded-lg text-stone-500 hover:bg-stone-200 flex items-center justify-center"
+          aria-label="Abrir menú"
         >
-          <i className={`fa-solid ${colapsado ? 'fa-chevron-right' : 'fa-chevron-left'} text-[10px]`}></i>
+          <i className="fa-solid fa-bars text-base"></i>
         </button>
       </div>
 
-      <nav className="flex-1 py-3 px-2 space-y-0.5">
-        {links.filter(l => !l.permiso || puede(l.permiso)).map(link => (
-          <NavLink
-            key={link.to}
-            to={link.to}
-            title={colapsado ? link.label : undefined}
-            className={({ isActive }) =>
-              `w-full flex items-center gap-2.5 rounded-lg text-sm transition-all text-left ${colapsado ? 'justify-center px-0 py-2.5' : 'px-3 py-2'} ${
-                isActive
-                  ? 'bg-brand-50 text-brand-700 font-semibold'
-                  : 'text-stone-500 hover:bg-stone-100'
-              }`
-            }
+      {/* Menú lateral: overlay deslizable en mobile, fijo (colapsable) desde md hacia arriba. */}
+      {abiertoMobile && (
+        <div className="md:hidden fixed inset-0 z-40 bg-black/30" onClick={() => setAbiertoMobile(false)} />
+      )}
+      <div
+        className={`
+          w-64 bg-stone-50 border-r border-stone-200 flex flex-col shrink-0 h-screen
+          fixed inset-y-0 left-0 z-50 transition-transform duration-200
+          ${abiertoMobile ? 'translate-x-0' : '-translate-x-full'}
+          md:sticky md:top-0 md:translate-x-0 md:z-auto md:transition-[width]
+          ${colapsado ? 'md:w-16' : 'md:w-56'}
+        `}
+      >
+        <div className={`px-3 py-4 border-b border-stone-200 flex items-center gap-2 ${colapsado ? 'md:flex-col' : ''}`}>
+          <div className={`flex items-center gap-2.5 min-w-0 flex-1 ${colapsado ? 'md:flex-none' : ''}`}>
+            <div className="w-8 h-8 rounded-lg bg-brand-500 flex items-center justify-center text-white text-xs font-extrabold shrink-0">M</div>
+            <div className={`min-w-0 ${colapsado ? 'md:hidden' : ''}`}>
+              <div className="text-sm font-bold text-stone-800 leading-none">MAD</div>
+              <div className="text-[13px] text-stone-400">Gestión Inmobiliaria</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setAbiertoMobile(false)}
+            className="md:hidden w-7 h-7 shrink-0 rounded-full text-stone-400 hover:bg-stone-200 flex items-center justify-center"
+            aria-label="Cerrar menú"
           >
-            <i className={`fa-solid ${link.icon} text-xs w-4 text-center shrink-0`}></i>
-            {!colapsado && link.label}
-          </NavLink>
-        ))}
-      </nav>
+            <i className="fa-solid fa-xmark text-sm"></i>
+          </button>
+          <button
+            onClick={alternarColapsado}
+            title={colapsado ? 'Expandir menú' : 'Fijar menú angosto'}
+            className={`hidden md:flex w-6 h-6 shrink-0 rounded-full text-stone-400 hover:bg-stone-200 hover:text-brand-600 transition items-center justify-center ${colapsado ? 'mt-1' : ''}`}
+          >
+            <i className={`fa-solid ${colapsado ? 'fa-chevron-right' : 'fa-chevron-left'} text-[10px]`}></i>
+          </button>
+        </div>
 
-      <div className={`py-3 border-t border-stone-200 ${colapsado ? 'px-2 flex flex-col items-center gap-2' : 'px-4'}`}>
-        <div className={`flex items-center gap-2.5 ${colapsado ? 'flex-col' : ''}`} title={colapsado ? `${usuario.nombre} — ${ROLES[usuario.rol]}` : undefined}>
-          <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold shrink-0">{iniciales}</div>
-          {!colapsado && (
-            <div className="min-w-0">
+        <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
+          {linksVisibles.map(link => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              onClick={() => setAbiertoMobile(false)}
+              title={colapsado ? link.label : undefined}
+              className={({ isActive }) =>
+                `w-full flex items-center gap-2.5 rounded-lg text-sm transition-all text-left px-3 py-2 ${colapsado ? 'md:justify-center md:px-0 md:py-2.5' : ''} ${
+                  isActive
+                    ? 'bg-brand-50 text-brand-700 font-semibold'
+                    : 'text-stone-500 hover:bg-stone-100'
+                }`
+              }
+            >
+              <i className={`fa-solid ${link.icon} text-xs w-4 text-center shrink-0`}></i>
+              <span className={colapsado ? 'md:hidden' : ''}>{link.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className={`py-3 border-t border-stone-200 px-4 ${colapsado ? 'md:px-2 md:flex md:flex-col md:items-center md:gap-2' : ''}`}>
+          <div className={`flex items-center gap-2.5 ${colapsado ? 'md:flex-col' : ''}`} title={colapsado ? `${usuario.nombre} — ${ROLES[usuario.rol]}` : undefined}>
+            <div className="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-bold shrink-0">{iniciales}</div>
+            <div className={`min-w-0 ${colapsado ? 'md:hidden' : ''}`}>
               <div className="text-xs font-semibold text-stone-700 truncate">{usuario.nombre}</div>
               <div className="text-[13px] text-stone-400">{ROLES[usuario.rol]}</div>
             </div>
+          </div>
+          <div className={colapsado ? 'md:hidden' : ''}>
+            <div className="flex items-center gap-3 mt-2 text-[14px]">
+              <button onClick={() => setCambiando(true)} className="text-stone-400 hover:text-brand-600">Contraseña</button>
+              <button onClick={logout} className="text-stone-400 hover:text-red-500">Cerrar sesión</button>
+              <button
+                onClick={alternarTema}
+                title={oscuro ? 'Modo claro' : 'Modo oscuro'}
+                className="ml-auto w-7 h-7 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-brand-600 transition flex items-center justify-center"
+              >
+                <i className={`fa-solid ${oscuro ? 'fa-sun' : 'fa-moon'} text-xs`}></i>
+              </button>
+            </div>
+          </div>
+          {colapsado && (
+            <div className="hidden md:flex flex-col items-center gap-2">
+              <button onClick={() => setCambiando(true)} title="Cambiar contraseña" className="w-7 h-7 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-brand-600 transition flex items-center justify-center">
+                <i className="fa-solid fa-key text-xs"></i>
+              </button>
+              <button onClick={alternarTema} title={oscuro ? 'Modo claro' : 'Modo oscuro'} className="w-7 h-7 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-brand-600 transition flex items-center justify-center">
+                <i className={`fa-solid ${oscuro ? 'fa-sun' : 'fa-moon'} text-xs`}></i>
+              </button>
+              <button onClick={logout} title="Cerrar sesión" className="w-7 h-7 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-red-500 transition flex items-center justify-center">
+                <i className="fa-solid fa-right-from-bracket text-xs"></i>
+              </button>
+            </div>
           )}
         </div>
-        {colapsado ? (
-          <div className="flex flex-col items-center gap-2">
-            <button onClick={() => setCambiando(true)} title="Cambiar contraseña" className="w-7 h-7 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-brand-600 transition flex items-center justify-center">
-              <i className="fa-solid fa-key text-xs"></i>
-            </button>
-            <button onClick={logout} title="Cerrar sesión" className="w-7 h-7 rounded-lg text-stone-400 hover:bg-stone-100 hover:text-red-500 transition flex items-center justify-center">
-              <i className="fa-solid fa-right-from-bracket text-xs"></i>
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-3 mt-2 text-[14px]">
-            <button onClick={() => setCambiando(true)} className="text-stone-400 hover:text-brand-600">Contraseña</button>
-            <button onClick={logout} className="text-stone-400 hover:text-red-500">Cerrar sesión</button>
-          </div>
-        )}
-      </div>
 
-      {cambiando && <CambiarPassword onCerrar={() => setCambiando(false)} />}
-    </div>
+        {cambiando && <CambiarPassword onCerrar={() => setCambiando(false)} />}
+      </div>
+    </>
   );
 }
 

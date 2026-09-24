@@ -45,6 +45,7 @@ export default function UsuariosPage() {
 
         {usuarios && (
           <div className="border border-stone-200 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
                 <tr>
@@ -71,6 +72,7 @@ export default function UsuariosPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

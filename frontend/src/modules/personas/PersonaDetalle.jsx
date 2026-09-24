@@ -50,7 +50,7 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
               {p.lista_negra === 1 && <span className="px-2 py-0.5 rounded bg-red-50 text-red-500 text-[13px] font-bold">Lista negra</span>}
             </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
               <Dato label="DNI" valor={formatDni(p.dni)} />
               <Dato label="CUIT / CUIL" valor={formatCuit(p.cuit)} />
               <Dato label="Email" valor={p.email} />
@@ -105,7 +105,7 @@ export default function PersonaDetalle({ id, onCerrar, onEditar, onCambio }) {
                     </Fila>
                   ))}
                   {nuevo && (
-                    <form onSubmit={agregarGarante} className="grid grid-cols-4 gap-2 p-2">
+                    <form onSubmit={agregarGarante} className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2">
                       <input className="input" required placeholder="Nombre" value={nuevo.nombre} onChange={e => setNuevo({ ...nuevo, nombre: e.target.value })} />
                       <input className="input" placeholder="DNI" value={nuevo.dni} onChange={e => setNuevo({ ...nuevo, dni: e.target.value })} />
                       <input className="input" placeholder="Teléfono" value={nuevo.telefono} onChange={e => setNuevo({ ...nuevo, telefono: e.target.value })} />

@@ -36,7 +36,7 @@ export default function GraficoCobrosFacturado({ datos }) {
         <Leyenda color="bg-[#2a78d6]" label="Facturado" total={dinero(totalFacturado)} />
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-[220px]" role="img" aria-label="Cobrado vs facturado por mes">
-        <line x1="0" y1={H - padBottom} x2={W} y2={H - padBottom} stroke="#e1e0d9" strokeWidth="1" />
+        <line x1="0" y1={H - padBottom} x2={W} y2={H - padBottom} stroke="var(--color-stone-200)" strokeWidth="1" />
         {datos.map((d, i) => {
           const cx = i * groupW + groupW / 2;
           const hc = (d.cobrado / max) * chartH;
@@ -52,7 +52,7 @@ export default function GraficoCobrosFacturado({ datos }) {
               <path d={barPath(xf, base - hf, barW, hf, 4)} fill="#2a78d6">
                 <title>{`Facturado ${mesCorto(d.periodo)}: ${dinero(d.facturado)}`}</title>
               </path>
-              <text x={cx} y={H - 6} textAnchor="middle" fontSize="12" fill="#898781">{mesCorto(d.periodo)}</text>
+              <text x={cx} y={H - 6} textAnchor="middle" fontSize="12" fill="var(--color-stone-400)">{mesCorto(d.periodo)}</text>
             </g>
           );
         })}

@@ -72,7 +72,7 @@ export default function NuevoContratoForm({ onCerrar, onCreado }) {
             {(inquilinos || []).filter(i => !i.lista_negra).map(i => <option key={i.id} value={i.id}>{i.nombre}</option>)}
           </select>
         </Campo>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Campo label="Inicio"><input className="input" type="date" required value={form.fechaInicio} onChange={e => set('fechaInicio', e.target.value)} /></Campo>
           <Campo label="Fin"><input className="input" type="date" required value={form.fechaFin} onChange={e => set('fechaFin', e.target.value)} /></Campo>
           <Campo label="Alquiler inicial"><InputDinero required value={form.montoInicial} onChange={v => set('montoInicial', v)} /></Campo>

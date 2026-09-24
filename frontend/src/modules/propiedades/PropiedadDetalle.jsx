@@ -45,7 +45,7 @@ export default function PropiedadDetalle({ id, onCerrar, onEditar, onCambio }) {
               <span className="px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">{ESTADOS[p.estado]}</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs">
               <Dato label="Propietario" valor={p.propietario_nombre} />
               <Dato label="Barrio / zona" valor={p.barrio} />
               <Dato label="Características" valor={caracteristicas} />

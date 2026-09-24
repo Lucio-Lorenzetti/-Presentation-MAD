@@ -79,7 +79,7 @@ export default function AlquileresPage() {
         </div>
 
         <div className="border border-stone-200 rounded-xl overflow-hidden">
-          <div className="px-4 py-3 bg-stone-50 border-b border-stone-200 flex items-center justify-between gap-3">
+          <div className="px-4 py-3 bg-stone-50 border-b border-stone-200 flex flex-wrap items-center justify-between gap-3">
             <select value={mostrarSolo} onChange={e => setMostrarSolo(e.target.value)} className="text-xs px-2 py-1.5 border border-stone-200 rounded-lg bg-white text-stone-500">
               <option value="ACTIVO">Contratos activos</option>
               <option value="FINALIZADO">Finalizados</option>
@@ -88,7 +88,7 @@ export default function AlquileresPage() {
             </select>
             <input
               type="text" placeholder="Buscar inquilino o propiedad…" value={q} onChange={e => setQ(e.target.value)}
-              className="text-xs px-3 py-1.5 border border-stone-200 rounded-lg w-64 bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
+              className="text-xs px-3 py-1.5 border border-stone-200 rounded-lg w-full sm:w-64 bg-white placeholder:text-stone-300 focus:outline-none focus:border-brand-300"
             />
           </div>
 

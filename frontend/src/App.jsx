@@ -18,7 +18,7 @@ export default function App() {
   if (!usuario) return <LoginPage />;
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-white">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <Routes>

@@ -85,7 +85,7 @@ export default function NuevaFacturaForm({ onEmitida, onCerrar }) {
           <ResultadoEmision resultado={resultado} onNueva={() => setResultado(null)} onCerrar={onCerrar} />
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Campo label="Tipo de documento">
                 <select className="input" value={form.docTipo} onChange={e => setCampo('docTipo', e.target.value)}>
                   {DOC_TIPOS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -115,7 +115,7 @@ export default function NuevaFacturaForm({ onEmitida, onCerrar }) {
               <input className="input" value={form.descripcion} onChange={e => setCampo('descripcion', e.target.value)} />
             </Campo>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Campo label="Período desde">
                 <input className="input" type="date" value={form.periodoDesde} onChange={e => setCampo('periodoDesde', e.target.value)} />
               </Campo>

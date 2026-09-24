@@ -90,6 +90,7 @@ export default function EstadisticasPage() {
               {datos.topDeudores.length === 0 ? (
                 <div className="p-6 text-center text-sm text-stone-400">No hay cuotas vencidas. 🎉</div>
               ) : (
+                <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-stone-50 text-stone-400 uppercase tracking-wider">
                     <tr>
@@ -110,6 +111,7 @@ export default function EstadisticasPage() {
                     ))}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           </>

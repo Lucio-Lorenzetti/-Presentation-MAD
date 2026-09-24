@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Dark mode manual (clase .dark en <html>, alternada desde el Sidebar), no por
+   preferencia del sistema — así el toggle es explícito y predecible. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Misma paleta que Presentación/presentacion.html, para que el sistema
      real se sienta continuación de la demo de venta. */
@@ -22,6 +26,32 @@
 
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-script: 'Tangerine', cursive;
+}
+
+/* Paleta oscura: se pisan acá las mismas variables que ya usa toda la app
+   (bg-white, bg-stone-*, bg-warm-*), así que cada componente existente pasa a
+   modo oscuro solo, sin tocar clase por clase. Naranja de marca sin cambios
+   (ya funciona bien sobre fondo oscuro) y los chips de estado (rojo/verde/
+   ámbar) quedan con su tono clarito de siempre — es un patrón común y legible
+   en UIs oscuras, y evita reescribir cada badge del sistema. */
+.dark {
+  --color-white: #18181b;
+  --color-stone-50: #1f1f23;
+  --color-stone-100: #27272c;
+  --color-stone-200: #35353c;
+  --color-stone-300: #47474f;
+  --color-stone-400: #7a7a84;
+  --color-stone-500: #9b9ba5;
+  --color-stone-600: #b7b7c0;
+  --color-stone-700: #d6d6db;
+  --color-stone-800: #f2f2f4;
+  --color-stone-900: #fafafa;
+
+  --color-warm-50: #1c1c20;
+  --color-warm-100: #232328;
+  --color-warm-200: #2d2d33;
+  --color-warm-300: #3a3a41;
+  --color-warm-400: #56565f;
 }
 
 /* Letra más grande en toda la app (accesibilidad): todos los tamaños de
